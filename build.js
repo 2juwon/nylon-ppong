@@ -23,6 +23,7 @@ if (server && !/^https?:\/\/[\w.:-]+$/.test(server)) throw new Error('서버 주
 const ui = read('src/ui.html');
 const merged = ui
   .replace('__SERVER_URL__', () => server)
+  .replace('__BUILD_ID__', () => new Date().toISOString().slice(0, 16))
   .replace('/*__ENGINE__*/', () => read('src/engine.js').trim())
   .replace('/*__AI__*/', () => read('src/ai.js').trim());
 

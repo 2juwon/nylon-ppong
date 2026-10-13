@@ -6,6 +6,8 @@
 import { DurableObject } from 'cloudflare:workers';
 import NP from '../../src/engine.js';
 import NPAI from '../../src/ai.js';
+import { Inbox, ADMIN_HTML } from './inbox.js';
+export { Inbox };
 
 const TURN_MS = 25000;   // 내 차례 제한 시간
 const CLAIM_MS = 10000;  // 뽕·박 결정 시간
@@ -18,8 +20,8 @@ const AI_POOL = [['삼촌', 'bold'], ['할머니', 'careful'], ['이모', 'norma
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, x-admin-key',
 };
 const json = (obj, status = 200) => new Response(JSON.stringify(obj), {
   status, headers: { 'content-type': 'application/json; charset=utf-8', ...CORS },
@@ -30,6 +32,15 @@ const randomCode = () => String(100000 + (rand32() % 900000));
 const randomSeed = () => rand32() || 1;
 const lobbyStub = (env) => env.LOBBY.get(env.LOBBY.idFromName('main'));
 const roomStub = (env, code) => env.ROOM.get(env.ROOM.idFromName(code));
+const inboxStub = (env) => env.INBOX.get(env.INBOX.idFromName('main'));
+function adminOk(request, env) {
+  const want = env.ADMIN_KEY || '';
+  const got = request.headers.get('x-admin-key') || '';
+  if (!want || got.length !== want.length) return false;
+  let diff = 0;
+  for (let i = 0; i < want.length; i++) diff |= want.charCodeAt(i) ^ got.charCodeAt(i);
+  return diff === 0;
+}
 
 function cleanName(s) {
   s = String(s || '').replace(/[\u0000-\u001f\u007f<>&"']/g, '').replace(/\s+/g, ' ').trim();
@@ -476,6 +487,29 @@ export default {
         return json({ error: '방을 만들지 못했어요' }, 500);
       }
       if (url.pathname === '/api/stats') return json(await lobbyStub(env).stats());
+      if (url.pathname === '/api/feedback' && request.method === 'POST') {
+        const len = +(request.headers.get('content-length') || 0);
+        if (len > 40000) return json({ error: '내용이 너무 길어요' }, 413);
+        let body = {};
+        try { body = await request.json(); } catch (e) { return json({ error: '보낸 내용을 읽지 못했어요' }, 400); }
+        const who = request.headers.get('CF-Connecting-IP') || 'anon';
+        const r = await inboxStub(env).add({ ...body, ua: request.headers.get('User-Agent') || '' }, who);
+        return json(r, r.error ? 429 : 200);
+      }
+      if (url.pathname === '/admin') return new Response(ADMIN_HTML, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-robots-tag': 'noindex', 'cache-control': 'no-store' } });
+      if (url.pathname.startsWith('/api/admin/')) {
+        if (!env.ADMIN_KEY) return json({ error: '관리자 비밀번호(ADMIN_KEY)가 아직 설정되지 않았어요' }, 503);
+        if (!adminOk(request, env)) return json({ error: '비밀번호가 맞지 않아요' }, 401);
+        if (url.pathname === '/api/admin/feedback' && request.method === 'GET') return json({ items: await inboxStub(env).list() });
+        const fm = url.pathname.match(/^\/api\/admin\/feedback\/([\w-]{6,40})$/);
+        if (fm && request.method === 'POST') {
+          let b = {};
+          try { b = await request.json(); } catch (e) { /* 빈 본문 */ }
+          return json({ ok: await inboxStub(env).setStatus(fm[1], b.status) });
+        }
+        if (fm && request.method === 'DELETE') return json({ ok: await inboxStub(env).remove(fm[1]) });
+        return json({ error: 'not found' }, 404);
+      }
       const m = url.pathname.match(/^\/ws\/(\d{6})$/);
       if (m) {
         if (request.headers.get('Upgrade') !== 'websocket') return new Response('websocket only', { status: 426, headers: CORS });

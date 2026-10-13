@@ -18,3 +18,11 @@ class_name = "Lobby"
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Room", "Lobby"]
+
+[[durable_objects.bindings]]
+name = "INBOX"
+class_name = "Inbox"
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["Inbox"]

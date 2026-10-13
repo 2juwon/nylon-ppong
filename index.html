@@ -396,6 +396,9 @@ table.scores td.tag { color: var(--seal); }
 .sheet .tag.me { background: var(--ink); color: var(--hanji); }
 .sheet .tag.host { background: var(--brass); color: var(--ink); }
 .sheet .tag.off { background: var(--seal); color: var(--hanji); }
+textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; resize: vertical; font-size: 16px; }
+.check { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; font-size: 13px; color: #4a4437; }
+.check input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--seal); flex: none; }
 .copied { font-size: 12px; color: var(--seal-deep); margin: 6px 0 0; min-height: 16px; }
 
 @media (max-width: 380px) {
@@ -1387,6 +1390,8 @@ table.scores td.tag { color: var(--seal); }
   let online = null;     // 사람들과 하는 중이면 { code, seat, room, skew, gen }
   let sheetKind = null;  // 지금 열린 시트 종류
   let startMode = 'online';
+  const recent = [];     // 최근 진행 기록 (고장 신고에 같이 보냄)
+  const BUILD = '2026-10-13T09:52';
 
   const T = (ms) => (reduceMotion ? 0 : Math.round(ms * (S.speed === 'fast' ? 0.5 : 1)));
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -1731,6 +1736,10 @@ table.scores td.tag { color: var(--seal); }
 
   async function present(a, ev, from) {
     const p = a.p;
+    try {
+      recent.push({ type: a.type, p, card: a.card, step: G && G.step, at: Date.now() });
+      if (recent.length > 20) recent.shift();
+    } catch (e) { /* 기록은 없어도 됨 */ }
     switch (a.type) {
       case 'draw': {
         const card = ev[0].card;
@@ -1992,8 +2001,10 @@ table.scores td.tag { color: var(--seal); }
           <button class="btn primary" type="button" data-start>${hasGame ? '새로 시작' : '시작하기'}</button>
         </div>
       </section>
-      <div class="sheet-actions" style="margin-top:8px"><button class="btn" type="button" data-rules>규칙 보기</button></div>
+      <div class="sheet-actions" style="margin-top:8px"><button class="btn" type="button" data-rules>규칙 보기</button>${SERVER ? '<button class="btn" type="button" data-feedback>의견 보내기</button>' : ''}</div>
     `, { dismiss: hasGame, kind: 'start' });
+    const fbb = sh.querySelector('[data-feedback]');
+    if (fbb) fbb.onclick = () => showFeedback(() => showStart());
     const val = (name) => { const i = sh.querySelector(`input[name="${name}"]:checked`); return i ? i.value : null; };
     sh.querySelectorAll('input[name="mode"]').forEach((i) => i.addEventListener('change', () => {
       startMode = val('mode');
@@ -2490,6 +2501,7 @@ table.scores td.tag { color: var(--seal); }
       <div class="sheet-head"><span class="seal-mark" aria-hidden="true">房</span><div><h2 id="sheetTitle">방 ${online.code.slice(0, 3)} ${online.code.slice(3)}</h2><p class="lede">${playing ? '게임 중에 나가면 내 자리는 컴퓨터가 대신 둬요.' : '사람들과 하는 중이에요.'}</p></div></div>
       <div class="sheet-actions"><button class="btn" type="button" data-invite>친구 초대하기</button><button class="btn" type="button" data-rules>규칙 보기</button></div>
       <p class="copied" data-copied></p>
+      <div class="sheet-actions"><button class="btn" type="button" data-feedback>의견 보내기</button></div>
       <div class="sheet-actions"><button class="btn" type="button" data-leave>방 나가기</button><button class="btn primary" type="button" data-close data-autofocus>돌아가기</button></div>`, { kind: 'menu' });
     sh.querySelector('[data-invite]').onclick = () => invite(sh);
     sh.querySelector('[data-rules]').onclick = () => {
@@ -2498,6 +2510,59 @@ table.scores td.tag { color: var(--seal); }
     };
     sh.querySelector('[data-leave]').onclick = () => leaveOnline();
     sh.querySelector('[data-close]').onclick = () => { closeSheet(); resume(); };
+    sh.querySelector('[data-feedback]').onclick = () => showFeedback(() => showOnlineMenu());
+  }
+
+  /* ───────── 의견·고장 신고 ───────── */
+  function feedbackContext() {
+    const c = { build: BUILD, mode: online ? 'online' : 'solo', screen: `${innerWidth}x${innerHeight}`, recent: recent.slice(-15) };
+    if (online) { c.room = online.code; c.seat = online.seat; c.status = online.room && online.room.status; }
+    if (G && !preview) {
+      c.game = {
+        round: G.round, rounds: G.rounds, phase: G.phase, step: G.step, turn: G.turn, dealer: G.dealer, rules: G.rules,
+        myHand: G.players[0].hand, myMelds: G.players[0].melds, handCounts: G.players.map((p) => p.hand.length),
+        scores: G.players.map((p) => p.score), pileTop: G.pile.slice(-6), deck: G.deck.length, claim: G.claim, history: G.history,
+      };
+      if (!online) c.fullState = G; // 혼자 할 때는 판 전체를 보내서 그대로 다시 재현
+    }
+    try { if (JSON.stringify(c).length > 15000) delete c.fullState; } catch (e) { delete c.fullState; }
+    return c;
+  }
+  function showFeedback(back) {
+    const inGame = !!(G && !preview);
+    const sh = openSheet(`
+      <div class="sheet-head"><span class="seal-mark" aria-hidden="true">書</span><div><h2 id="sheetTitle">의견 보내기</h2><p class="lede">고장 난 곳이나 바라는 점을 알려 주세요. 만든 사람만 읽어요.</p></div></div>
+      <div class="field">${seg('fb-kind', [['bug', '고장 신고'], ['idea', '의견']], inGame ? 'bug' : 'idea')}</div>
+      <div class="field"><label class="field-label" for="fbText">내용</label><textarea class="text-input" id="fbText" maxlength="2000" placeholder="예: 뽕하고 3장 남았는데 판이 안 끝나요"></textarea></div>
+      <div class="field"><label class="field-label" for="fbContact">답을 받고 싶으면 연락처 (선택)</label><input class="text-input" id="fbContact" maxlength="100" placeholder="이메일이나 카톡 아이디"></div>
+      ${inGame ? '<label class="check"><input type="checkbox" id="fbCtx" checked><span>지금 게임 상황도 같이 보내기<br>내 손패와 최근 진행 기록이 들어가요. 고장 원인을 찾는 데 큰 도움이 돼요.</span></label>' : ''}
+      <p class="notice" data-notice hidden></p>
+      <div class="sheet-actions"><button class="btn" type="button" data-back>돌아가기</button><button class="btn primary" type="button" data-send>보내기</button></div>`, { kind: 'feedback' });
+    const note = (t, ok) => { const n = sh.querySelector('[data-notice]'); n.textContent = t; n.hidden = !t; n.style.background = ok ? 'rgba(143,194,122,.25)' : ''; n.style.color = ok ? 'var(--ink)' : ''; };
+    sh.querySelector('[data-back]').onclick = back;
+    const send = sh.querySelector('[data-send]');
+    send.onclick = async () => {
+      const text = sh.querySelector('#fbText').value.trim();
+      if (!text) { note('내용을 적어 주세요'); sh.querySelector('#fbText').focus(); return; }
+      const kind = (sh.querySelector('input[name="fb-kind"]:checked') || {}).value || 'idea';
+      const ctxBox = sh.querySelector('#fbCtx');
+      send.disabled = true;
+      note('');
+      try {
+        const r = await fetch(SERVER + '/api/feedback', {
+          method: 'POST', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ kind, text, contact: sh.querySelector('#fbContact').value, context: ctxBox && ctxBox.checked ? feedbackContext() : { build: BUILD, mode: online ? 'online' : 'solo' } }),
+        });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || j.error) throw new Error(j.error || '보내지 못했어요');
+        sh.querySelector('#fbText').value = '';
+        note('보냈어요. 고마워요!', true);
+        send.textContent = '보냄';
+      } catch (e) {
+        note(e.message && /[가-힣]/.test(e.message) ? e.message : '보내지 못했어요. 잠시 뒤에 다시 해 주세요');
+        send.disabled = false;
+      }
+    };
   }
 
   function showInvited(code) {
