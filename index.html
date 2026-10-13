@@ -1,0 +1,2044 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="컴퓨터와 겨루는 화투 나일롱뽕 — 뽕! 박! 스톱! 손에 남은 패 합이 가장 낮으면 이겨요">
+<meta name="theme-color" content="#474e35">
+<meta property="og:type" content="website">
+<meta property="og:title" content="나일롱뽕">
+<meta property="og:description" content="컴퓨터와 겨루는 화투 나일롱뽕 — 뽕! 박! 스톱! 손에 남은 패 합이 가장 낮으면 이겨요">
+<meta property="og:url" content="https://2juwon.github.io/nylon-ppong/">
+<meta property="og:image" content="https://2juwon.github.io/nylon-ppong/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Crect%20x%3D%276%27%20y%3D%271.5%27%20width%3D%2720%27%20height%3D%2729%27%20rx%3D%273%27%20fill%3D%27%23f1e7cf%27%20stroke%3D%27%231c1913%27%20stroke-width%3D%271.2%27%2F%3E%3Crect%20x%3D%278.6%27%20y%3D%274.2%27%20width%3D%2714.8%27%20height%3D%2723.6%27%20rx%3D%271.4%27%20fill%3D%27%23b8301d%27%2F%3E%3Ccircle%20cx%3D%2716%27%20cy%3D%2711.5%27%20r%3D%275%27%20fill%3D%27%23f8f1dd%27%2F%3E%3Cpath%20d%3D%27M8.6%2027.8V18.6c3-3%206-3.4%209-1.4%202%201.3%204%201.1%205.8-.4v11z%27%20fill%3D%27%231c1913%27%2F%3E%3C%2Fsvg%3E">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}img{max-width:100%}</style>
+<title>나일롱뽕</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* Layout: 한 화면짜리 화투판 — 위에 상대 자리, 가운데 담요 위 더미·버림패, 아래 내 손패. 결과는 종이 점수표가 올라옴 */
+:root {
+  --blanket: #474e35;        /* 국방색 담요 */
+  --blanket-deep: #363c29;
+  --blanket-lift: rgba(16, 18, 9, 0.30);
+  --stitch: rgba(196, 188, 128, 0.42);
+  --ink: #1c1913;            /* 먹 */
+  --hanji: #f1e7cf;          /* 화투 앞면·점수표 종이 */
+  --hanji-shade: #ddcfae;
+  --hanji-line: rgba(28, 25, 19, 0.12);
+  --seal: #c3321f;           /* 인주 · 화투 뒷면 */
+  --seal-deep: #8d2014;
+  --brass: #e2b24e;          /* 선 표시 · 차례 */
+  --brass-glow: rgba(226, 178, 78, 0.38);
+  --text: #f3ecd9;
+  --text-dim: #c4bf9f;
+  --text-faint: rgba(243, 236, 217, 0.34);
+  --scrim: rgba(17, 15, 9, 0.66);
+  --av-1: #2f6c64;
+  --av-2: #7e3d5c;
+  --av-3: #9a6a25;
+  --good: #8fc27a;
+  --font-display: "Black Han Sans", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Noto Sans CJK KR", sans-serif;
+  --font-ui: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Noto Sans CJK KR", system-ui, sans-serif;
+  --hand-w: clamp(44px, min(calc((min(100vw, 760px) - 62px) / 6), 9.6vh), 78px);
+  --pile-w: clamp(54px, min(20vw, 10.6vh), 96px);
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html { height: 100%; box-sizing: border-box; }
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  height: 100%;
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  background-color: var(--blanket);
+  background-image:
+    radial-gradient(120% 70% at 50% 46%, rgba(255, 250, 215, 0.07), transparent 62%),
+    repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.06) 0 2px, transparent 2px 4px),
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 5px);
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+.app {
+  height: 100%;
+  min-height: 560px;
+  max-width: 760px;
+  margin: 0 auto;
+  padding-inline: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── 위 막대 ── */
+.bar { display: flex; align-items: center; gap: 10px; padding-block: 10px 0; }
+.brand { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+.seal-mark {
+  flex: none; width: 28px; height: 28px; border-radius: 6px;
+  display: grid; place-items: center;
+  background: var(--seal); color: var(--hanji);
+  font: 15px/1 var(--font-display);
+  box-shadow: inset 0 0 0 2px var(--seal), inset 0 0 0 3.5px var(--hanji);
+  transform: rotate(-6deg);
+}
+.brand h1 { margin: 0; font: 22px/1 var(--font-display); letter-spacing: 0.02em; white-space: nowrap; }
+.round-chip { font-size: 12px; color: var(--text-dim); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tools { display: flex; gap: 4px; flex: none; }
+.tool {
+  width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--blanket-lift); display: grid; place-items: center; cursor: pointer; padding: 0;
+}
+.tool svg { width: 19px; height: 19px; stroke: var(--text); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tool[aria-pressed="false"] .on, .tool[aria-pressed="true"] .off { display: none; }
+.tool:hover { background: rgba(16, 18, 9, 0.45); }
+
+/* ── 상대 자리 ── */
+.seats { display: grid; grid-template-columns: repeat(var(--opp, 3), minmax(0, 1fr)); gap: 8px; }
+.seat {
+  position: relative; min-width: 0;
+  background: var(--blanket-lift);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px; padding: 8px 8px 7px;
+  display: grid; gap: 6px; align-content: start;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.seat.turn { border-color: var(--brass); box-shadow: 0 0 0 3px var(--brass-glow); }
+.who { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.avatar {
+  flex: none; width: 24px; height: 24px; border-radius: 50%;
+  display: grid; place-items: center;
+  font: 12px/1 var(--font-display); color: var(--hanji); background: var(--av);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.18);
+}
+.who .name { font-weight: 700; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sun {
+  flex: none; font: 10px/1 var(--font-display); color: var(--ink); background: var(--brass);
+  padding: 3px 4px 2px; border-radius: 3px; transform: rotate(-4deg);
+}
+.seat-score { font: 14px/1 var(--font-display); color: var(--text-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.seat-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 24px; }
+.minis { display: flex; align-items: center; min-height: 22px; }
+.mini {
+  width: 14px; height: 22px; border-radius: 2.5px;
+  background: var(--seal);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45), inset 0 0 0 2px rgba(0, 0, 0, 0.14);
+}
+.mini + .mini { margin-left: -7px; }
+.out-tag { font-size: 11px; color: var(--brass); }
+.melds { display: flex; gap: 4px; flex-wrap: wrap; }
+.meld { display: flex; align-items: center; gap: 3px; font-size: 11px; color: var(--text-dim); }
+.meld .card { --w: 20px; }
+.thinking { position: absolute; right: 8px; bottom: 7px; display: flex; gap: 3px; }
+.thinking i { width: 4px; height: 4px; border-radius: 50%; background: var(--brass); animation: blink 1s infinite; }
+.thinking i:nth-child(2) { animation-delay: 0.15s; }
+.thinking i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes blink { 0%, 100% { opacity: 0.25 } 50% { opacity: 1 } }
+
+/* ── 담요 가운데 ── */
+.felt {
+  flex: 1; min-height: 0;
+  border: 2px dashed var(--stitch); border-radius: 22px;
+  display: flex; flex-direction: column; justify-content: center; gap: 12px;
+  padding: 12px 10px;
+}
+.center { display: flex; align-items: flex-start; justify-content: center; gap: clamp(28px, 10vw, 72px); }
+.stack { display: grid; justify-items: center; gap: 6px; }
+.stack-label { font-size: 12px; color: var(--text-dim); font-variant-numeric: tabular-nums; min-height: 15px; text-align: center; }
+.deck, .pile { position: relative; width: var(--pile-w); height: calc(var(--pile-w) * 1.6); }
+.deck { cursor: default; border: 0; padding: 0; background: none; }
+.deck .card, .pile .card { --w: var(--pile-w); position: absolute; left: 0; top: 0; }
+.deck.can { cursor: pointer; }
+.deck.can::after {
+  content: ""; position: absolute; inset: -6px; border-radius: 12px;
+  border: 2px solid var(--brass); animation: pulse 1.3s ease-in-out infinite;
+}
+.pile.claimable::after {
+  content: ""; position: absolute; inset: -6px; border-radius: 12px;
+  border: 2px solid var(--seal); box-shadow: 0 0 18px rgba(195, 50, 31, 0.6);
+  animation: pulse 0.9s ease-in-out infinite;
+}
+@keyframes pulse { 0%, 100% { opacity: 0.35; transform: scale(0.98) } 50% { opacity: 1; transform: scale(1.02) } }
+.pile-empty { position: absolute; inset: 0; border-radius: 8px; border: 1.5px dashed var(--stitch); }
+
+.tracker { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 3px; max-width: 520px; width: 100%; margin: 0 auto; }
+.tk { display: grid; justify-items: center; gap: 3px; padding: 4px 0 5px; border-radius: 6px; background: rgba(16, 18, 9, 0.22); }
+.tk b { font: 11px/1 var(--font-display); color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.tk.dead b { color: var(--text-faint); }
+.pips { display: grid; grid-template-columns: repeat(2, 5px); gap: 2px; }
+.pip { width: 5px; height: 5px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--text-faint); }
+.pip.seen { background: var(--text-dim); box-shadow: none; }
+.pip.mine { background: var(--seal); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3); }
+.tracker-cap { display: flex; justify-content: center; gap: 12px; font-size: 11px; color: var(--text-dim); }
+.tracker-cap span { display: inline-flex; align-items: center; gap: 4px; }
+.tracker-cap .pip { display: inline-block; }
+
+.msg { margin: 0; min-height: 20px; text-align: center; font-size: 14px; font-weight: 500; color: var(--text); text-wrap: balance; }
+.msg em { font-style: normal; color: var(--brass); }
+
+/* ── 내 자리 ── */
+.me { display: grid; gap: 8px; padding-block: 0 12px; }
+.me-head { display: flex; align-items: center; gap: 8px; min-height: 26px; }
+.me-head .stat { font-size: 13px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.me-head .stat b { font: 16px/1 var(--font-display); color: var(--text); margin-left: 3px; }
+.me-head .stat + .stat { margin-left: auto; }
+.me.turn .avatar { box-shadow: 0 0 0 3px var(--brass-glow), inset 0 0 0 1.5px rgba(255, 255, 255, 0.2); }
+.hand {
+  display: flex; justify-content: center; align-items: flex-end; gap: 6px;
+  min-height: calc(var(--hand-w) * 1.6 + 14px); padding-top: 14px;
+}
+.hand .card { cursor: default; transition: transform 0.16s ease, box-shadow 0.16s ease; }
+.hand.pick .card { cursor: pointer; }
+.hand.pick .card:hover { transform: translateY(-5px); }
+.hand .card.sel { transform: translateY(-14px); box-shadow: 0 0 0 2.5px var(--brass), 0 10px 18px rgba(0, 0, 0, 0.45); }
+.hand .card.match { box-shadow: 0 0 0 2.5px var(--seal), 0 6px 14px rgba(0, 0, 0, 0.4); transform: translateY(-6px); }
+.actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; min-height: 48px; }
+.hint { font-size: 13px; color: var(--text-dim); text-align: center; }
+
+.btn {
+  border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px;
+  background: var(--blanket-deep); color: var(--text);
+  padding: 12px 18px; min-height: 46px;
+  font: 700 15px/1.1 var(--font-ui); cursor: pointer;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn.primary { background: var(--seal); border-color: var(--seal-deep); color: var(--hanji); box-shadow: 0 3px 0 var(--seal-deep); }
+.btn.gold { background: var(--brass); border-color: #a7802f; color: var(--ink); box-shadow: 0 3px 0 #9a7428; }
+.btn.shout { font: 22px/1 var(--font-display); padding: 10px 26px; letter-spacing: 0.04em; }
+.btn small { font: 500 12px/1 var(--font-ui); opacity: 0.85; }
+
+/* ── 화투패 ── */
+.card {
+  --w: var(--hand-w);
+  position: relative; flex: none;
+  width: var(--w); height: calc(var(--w) * 1.6);
+  border-radius: calc(var(--w) * 0.1);
+  background: var(--hanji);
+  border: 0; padding: 0; margin: 0;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.42), 0 3px 6px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+}
+.card svg { position: absolute; left: 8%; top: 6%; width: 84%; height: 88%; overflow: hidden; border-radius: calc(var(--w) * 0.04); }
+.card .n {
+  position: absolute; left: 5%; top: 3.5%;
+  min-width: calc(var(--w) * 0.34); height: calc(var(--w) * 0.34);
+  padding: 0 calc(var(--w) * 0.05);
+  display: grid; place-items: center;
+  background: var(--ink); color: var(--hanji);
+  font: calc(var(--w) * 0.24)/1 var(--font-display);
+  border-radius: calc(var(--w) * 0.07);
+  box-shadow: 0 0 0 calc(var(--w) * 0.025) var(--hanji);
+  font-variant-numeric: tabular-nums;
+}
+.card.back {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.16) 0 18%, transparent 19%),
+    var(--seal);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 3px 6px rgba(0, 0, 0, 0.32), inset 0 0 0 calc(var(--w) * 0.07) rgba(0, 0, 0, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.card.incoming { visibility: hidden; }
+.ghost { position: fixed; z-index: 40; transform-origin: 0 0; pointer-events: none; margin: 0; }
+.fx { position: fixed; inset: 0; pointer-events: none; z-index: 45; }
+
+/* ── 도장(뽕·박·스톱) ── */
+.stamp {
+  position: fixed; z-index: 70; pointer-events: none;
+  translate: -50% -50%;
+  padding: 10px 16px 8px; border-radius: 10px;
+  background: var(--seal); color: var(--hanji);
+  font: 38px/1 var(--font-display); letter-spacing: 0.04em; white-space: nowrap;
+  box-shadow: inset 0 0 0 3px var(--seal), inset 0 0 0 5.5px var(--hanji), 0 10px 26px rgba(0, 0, 0, 0.45);
+  animation: stampIn 0.42s cubic-bezier(.2, 1.4, .4, 1) both;
+}
+.stamp small { display: block; margin-top: 5px; font: 700 12px/1.2 var(--font-ui); letter-spacing: 0; text-align: center; }
+.stamp.out { animation: stampOut 0.35s ease-in both; }
+@keyframes stampIn { 0% { transform: rotate(-9deg) scale(2.3); opacity: 0 } 60% { transform: rotate(-9deg) scale(0.94); opacity: 1 } 100% { transform: rotate(-9deg) scale(1); opacity: 1 } }
+@keyframes stampOut { to { transform: rotate(-9deg) scale(1.08); opacity: 0 } }
+
+/* ── 종이 시트 ── */
+.backdrop {
+  position: fixed; inset: 0; z-index: 80;
+  background: var(--scrim);
+  display: grid; align-items: end; justify-items: center;
+  padding: 16px; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); padding-top: calc(16px + env(safe-area-inset-top, 0px));
+}
+.sheet {
+  width: min(560px, 100%); max-height: 100%; overflow: auto;
+  background: var(--hanji); color: var(--ink);
+  border-radius: 16px; padding: 20px 18px 18px;
+  box-shadow: 0 -6px 40px rgba(0, 0, 0, 0.45);
+  animation: rise 0.28s cubic-bezier(.2, .8, .2, 1) both;
+  overscroll-behavior: contain;
+}
+@keyframes rise { from { transform: translateY(24px); opacity: 0 } }
+@media (min-width: 700px) { .backdrop { align-items: center; } }
+.sheet h2 { margin: 0; font: 26px/1.15 var(--font-display); letter-spacing: 0.01em; text-wrap: balance; }
+.sheet h3 { margin: 18px 0 6px; font: 16px/1.2 var(--font-display); letter-spacing: 0.01em; }
+.sheet p { margin: 6px 0 0; line-height: 1.6; }
+.sheet .lede { color: #4a4437; }
+.sheet-head { display: flex; gap: 12px; align-items: center; }
+.sheet .seal-mark { width: 44px; height: 44px; font-size: 22px; border-radius: 9px; }
+.sheet .btn { box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25); }
+.sheet .btn:not(.primary):not(.gold) { background: transparent; color: var(--ink); border-color: rgba(28, 25, 19, 0.3); }
+.sheet-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+.sheet-actions .btn { flex: 1 1 140px; }
+
+.field { margin-top: 14px; }
+.field-label { display: block; font-size: 12px; font-weight: 700; color: #5a5242; margin-bottom: 6px; letter-spacing: 0.02em; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg label { position: relative; }
+.seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.seg span {
+  display: inline-flex; align-items: center; min-height: 38px; padding: 0 14px; border-radius: 10px;
+  border: 1.5px solid rgba(28, 25, 19, 0.22); font-weight: 500; font-size: 14px; background: rgba(255, 255, 255, 0.35);
+}
+.seg input:checked + span { background: var(--ink); color: var(--hanji); border-color: var(--ink); }
+.seg input:focus-visible + span { outline: 2px solid var(--seal); outline-offset: 2px; }
+details.house { margin-top: 16px; border-top: 1px solid var(--hanji-line); padding-top: 10px; }
+details.house summary { cursor: pointer; font-weight: 700; font-size: 14px; list-style: none; display: flex; align-items: center; gap: 6px; }
+details.house summary::-webkit-details-marker { display: none; }
+details.house summary::before { content: "＋"; font-weight: 700; color: var(--seal); }
+details.house[open] summary::before { content: "－"; }
+details.house .note { font-size: 12px; color: #6a6250; margin-top: 4px; }
+
+/* 결과 점수표 */
+.tally { list-style: none; margin: 14px 0 0; padding: 0; border-top: 1.5px solid var(--ink); }
+.tally li {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "who round total" "cards cards sum";
+  align-items: center; column-gap: 14px; row-gap: 6px; padding: 10px 2px;
+  border-bottom: 1px solid var(--hanji-line);
+}
+.tally li.win { background: linear-gradient(90deg, rgba(226, 178, 78, 0.28), transparent 75%); }
+.tally .who { grid-area: who; }
+.tally .who .name { font-size: 15px; }
+.tally .note { font-size: 11px; font-weight: 700; color: var(--seal); white-space: nowrap; }
+.tally .cards { grid-area: cards; display: flex; gap: 3px; flex-wrap: wrap; align-items: center; min-width: 0; }
+.tally .cards .card { --w: 26px; }
+.tally .cards .sep { width: 6px; }
+.tally .cards .meld-tag { font-size: 11px; color: #6a6250; margin-right: 2px; }
+.tally .num { text-align: right; font: 20px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.tally .num small { display: block; font: 500 10px/1.2 var(--font-ui); color: #6a6250; margin-bottom: 3px; }
+.tally .round { grid-area: round; }
+.tally .total { grid-area: total; min-width: 52px; }
+.tally .sum { grid-area: sum; font-size: 12px; color: #5a5242; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.empty-hand { font-size: 12px; color: #6a6250; }
+
+.scoretable-wrap { overflow-x: auto; margin-top: 12px; }
+table.scores { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
+table.scores th, table.scores td { padding: 7px 8px; text-align: right; border-bottom: 1px solid var(--hanji-line); white-space: nowrap; }
+table.scores th:first-child, table.scores td:first-child { text-align: left; color: #5a5242; }
+table.scores thead th { font-size: 12px; border-bottom: 1.5px solid var(--ink); }
+table.scores tfoot td { font: 18px/1 var(--font-display); border-top: 1.5px solid var(--ink); border-bottom: 0; padding-top: 10px; }
+table.scores td.tag { color: var(--seal); }
+
+.rank-list { list-style: none; margin: 14px 0 0; padding: 0; }
+.rank-list li { display: flex; align-items: center; gap: 10px; padding: 10px 4px; border-bottom: 1px solid var(--hanji-line); }
+.rank-list .rk { font: 18px/1 var(--font-display); width: 38px; }
+.rank-list li.first .rk { color: var(--seal); }
+.rank-list .pts { margin-left: auto; font: 20px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+
+.rules { font-size: 14px; }
+.rules h3:first-of-type { margin-top: 14px; }
+.rules p { margin: 0; }
+.rules table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 13px; }
+.rules th, .rules td { padding: 6px 6px; border-bottom: 1px solid var(--hanji-line); text-align: left; vertical-align: top; }
+.rules td:last-child, .rules th:last-child { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rules .src { margin-top: 16px; font-size: 12px; color: #6a6250; }
+.rules a { color: var(--seal-deep); }
+
+@media (max-width: 380px) {
+  .brand h1 { font-size: 19px; }
+  .tool { width: 32px; height: 32px; }
+  .btn { padding: 11px 14px; font-size: 14px; }
+}
+@media (max-height: 700px) {
+  .felt { gap: 8px; padding-block: 8px; }
+  .tracker-cap { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+<svg id="sprite" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"></svg>
+
+<div class="app" id="app">
+  <header class="bar">
+    <div class="brand">
+      <span class="seal-mark" aria-hidden="true">뽕</span>
+      <h1>나일롱뽕</h1>
+      <span class="round-chip" id="roundChip"></span>
+    </div>
+    <div class="tools">
+      <button class="tool" id="btnScores" type="button" title="점수표" aria-label="점수표">
+        <svg viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 8.5h8M8 12h8M8 15.5h5"/></svg>
+      </button>
+      <button class="tool" id="btnRules" type="button" title="규칙" aria-label="규칙">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.6"/><path d="M12 16.9v.1"/></svg>
+      </button>
+      <button class="tool" id="btnSound" type="button" title="소리" aria-label="소리" aria-pressed="true">
+        <svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="on" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="off" d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+      </button>
+      <button class="tool" id="btnMenu" type="button" title="새 게임" aria-label="새 게임">
+        <svg viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4.5 4.5v3.6h3.6"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <section class="seats" id="seats" aria-label="상대"></section>
+
+  <section class="felt" id="felt" aria-label="판">
+    <div class="center">
+      <div class="stack">
+        <button class="deck" id="deck" type="button" aria-label="더미"></button>
+        <span class="stack-label" id="deckLabel"></span>
+      </div>
+      <div class="stack">
+        <div class="pile" id="pile" aria-label="버림패"></div>
+        <span class="stack-label" id="pileLabel"></span>
+      </div>
+    </div>
+    <div>
+      <div class="tracker" id="tracker" aria-label="나온 패"></div>
+    </div>
+    <div class="tracker-cap" aria-hidden="true">
+      <span><i class="pip seen"></i>나온 패</span><span><i class="pip mine"></i>내 손</span><span><i class="pip"></i>모름</span>
+    </div>
+    <p class="msg" id="msg" aria-live="polite"></p>
+  </section>
+
+  <section class="me" id="me" aria-label="내 패">
+    <div class="me-head" id="meHead"></div>
+    <div class="hand" id="hand"></div>
+    <div class="actions" id="actions"></div>
+  </section>
+</div>
+
+<div class="fx" id="fx"></div>
+<div class="backdrop" id="backdrop" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle"></div></div>
+
+<script>
+/* 나일롱뽕 규칙 엔진
+ * - 상태는 JSON으로 그대로 저장/전송할 수 있는 순수 데이터
+ * - apply(state, action)로만 상태가 바뀜 → 2차(온라인 방)에서도 그대로 재사용
+ * - 규칙 출처: 나무위키 '나이롱뽕' 문서
+ */
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.NP = api;
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  const MONTH_NAMES = ['', '송학', '매조', '벚꽃', '흑싸리', '난초', '모란', '홍싸리', '공산', '국진', '단풍', '오동', '비'];
+
+  const DEFAULT_RULES = Object.freeze({
+    stopLimit: 5,           // 손패 합이 이 값 이하일 때 스톱 가능 (지역에 따라 10)
+    stopPenalty: 30,        // 스톱 실패 시 손패 합에 더하는 점수 (지역에 따라 50)
+    bagaji: 20,             // 박·자연바가지를 맞은 사람이 더 받는 점수
+    chongtongStrict: false, // true면 4-2 형태만 총통으로 인정
+    naturalFree: false,     // 하우스 룰: 손패 속 자연뽕(같은 월 3장)은 점수에서 뺌
+  });
+
+  const monthOf = (id) => (id >> 2) + 1; // 카드 id 0~47 → 월 1~12
+
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function shuffledDeck(rand) {
+    const a = [];
+    for (let i = 0; i < 48; i++) a.push(i);
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      const t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  function sumMonths(hand) {
+    let s = 0;
+    for (const c of hand) s += monthOf(c);
+    return s;
+  }
+
+  // 점수로 세는 손패 합 (하우스 룰이 켜져 있으면 자연뽕 3장은 뺌)
+  function handTotal(hand, rules) {
+    let s = sumMonths(hand);
+    if (rules && rules.naturalFree) {
+      const cnt = new Array(13).fill(0);
+      for (const c of hand) cnt[monthOf(c)]++;
+      for (let m = 1; m <= 12; m++) if (cnt[m] >= 3) s -= 3 * m;
+    }
+    return s;
+  }
+
+  // 6장 족보. 여러 개에 해당하면 점수가 가장 좋은(낮은) 것을 고름
+  function findJokbo(hand, rules) {
+    if (!hand || hand.length !== 6) return null;
+    const cnt = new Array(13).fill(0);
+    let sum = 0;
+    for (const c of hand) { const m = monthOf(c); cnt[m]++; sum += m; }
+    const groups = cnt.filter((x) => x > 0).sort((a, b) => b - a);
+    const found = [];
+    if (groups[0] === 4) {
+      const strictOk = groups.length === 2 && groups[1] === 2;
+      if (!(rules && rules.chongtongStrict) || strictOk) found.push({ key: 'chongtong', name: '총통', score: -100 });
+    }
+    if (sum <= 10) found.push({ key: 'under10', name: '10 부족', score: -100 });
+    if (sum >= 60) found.push({ key: 'over60', name: '60 이상', score: -100 });
+    if (groups.length === 6) {
+      let lo = 13, hi = 0;
+      for (let m = 1; m <= 12; m++) if (cnt[m]) { lo = Math.min(lo, m); hi = Math.max(hi, m); }
+      if (hi - lo === 5) found.push({ key: 'straight', name: '스트레이트', score: -sum });
+    }
+    const ttoi = (groups.length === 2 && groups[0] === 3 && groups[1] === 3) ||
+      (groups.length === 3 && groups.every((g) => g === 2));
+    if (ttoi) found.push({ key: 'ttoi', name: '또이또이', score: 0 });
+    if (!found.length) return null;
+    found.sort((a, b) => a.score - b.score);
+    return { key: found[0].key, name: found[0].name, score: found[0].score, sum, all: found.map((f) => f.name) };
+  }
+
+  // 버림패 card에 대해 이 손패로 할 수 있는 것: null | 'ppong' | 'bak' | 'jayeon'
+  function claimKind(hand, card) {
+    const m = monthOf(card);
+    const same = hand.filter((x) => monthOf(x) === m);
+    if (same.length < 2) return null;
+    if (hand.length === 2) return 'bak'; // 이미 한 번 뽕해서 남은 2장이 모두 같은 월
+    if (hand.length === 5) {
+      const used = same.slice(0, 2);
+      const rest = hand.filter((x) => !used.includes(x));
+      if (rest.length === 3 && rest.every((x) => monthOf(x) === monthOf(rest[0]))) return 'jayeon';
+    }
+    return 'ppong';
+  }
+
+  function createGame(opts) {
+    if (!opts || !Array.isArray(opts.players)) throw new Error('players가 필요해요');
+    const n = opts.players.length;
+    if (n < 2 || n > 6) throw new Error('2~6명까지 할 수 있어요');
+    const state = {
+      v: 1,
+      rules: Object.assign({}, DEFAULT_RULES, opts.rules || {}),
+      players: opts.players.map((p) => ({
+        name: String(p.name || '플레이어'),
+        kind: p.kind === 'human' ? 'human' : 'ai',
+        persona: p.persona || null,
+        hand: [], melds: [], score: 0, drawsSinceMeld: 0,
+      })),
+      rounds: Math.max(1, (opts.rounds | 0) || 5),
+      round: 0,
+      dealer: Math.min(n - 1, Math.max(0, opts.firstDealer | 0)),
+      seed: (opts.seed >>> 0) || 1,
+      deck: [], pile: [],
+      turn: 0, phase: 'idle', claim: null,
+      result: null, history: [],
+      step: 0,
+    };
+    deal(state);
+    return state;
+  }
+
+  // 반시계방향으로 3장씩, 이어서 선에게 3장·나머지 2장씩 → 선 6장, 나머지 5장
+  function deal(state) {
+    state.round += 1;
+    const rand = mulberry32((state.seed + Math.imul(state.round, 0x9E3779B9)) >>> 0);
+    const deck = shuffledDeck(rand);
+    const n = state.players.length;
+    for (const p of state.players) { p.hand = []; p.melds = []; p.drawsSinceMeld = 0; }
+    const order = [];
+    for (let k = 0; k < n; k++) order.push((state.dealer + k) % n);
+    for (const i of order) for (let c = 0; c < 3; c++) state.players[i].hand.push(deck.pop());
+    for (const i of order) {
+      const extra = i === state.dealer ? 3 : 2;
+      for (let c = 0; c < extra; c++) state.players[i].hand.push(deck.pop());
+    }
+    state.pile = [{ card: deck.pop(), by: -1, kind: 'open' }];
+    state.deck = deck;
+    state.turn = state.dealer;
+    state.phase = 'discard'; // 선은 이미 6장이므로 버리기부터
+    state.claim = null;
+    state.result = null;
+  }
+
+  function canStop(state, p) {
+    if (state.phase !== 'draw' || state.turn !== p) return false;
+    return handTotal(state.players[p].hand, state.rules) <= state.rules.stopLimit;
+  }
+
+  function findClaimer(state, from, card) {
+    const n = state.players.length;
+    for (let k = 1; k < n; k++) {
+      const q = (from + k) % n;
+      if (claimKind(state.players[q].hand, card)) return q;
+    }
+    return -1;
+  }
+
+  // 지금 결정을 내려야 하는 사람
+  function actorOf(state) {
+    if (state.phase === 'claim' && state.claim) return state.claim.p;
+    if (state.phase === 'draw' || state.phase === 'discard') return state.turn;
+    return -1;
+  }
+
+  function legalActions(state, p) {
+    const out = [];
+    const pl = state.players[p];
+    if (!pl) return out;
+    switch (state.phase) {
+      case 'draw':
+        if (state.turn === p) {
+          out.push({ type: 'draw', p });
+          if (canStop(state, p)) out.push({ type: 'stop', p });
+        }
+        break;
+      case 'discard':
+        if (state.turn === p) {
+          if (pl.hand.length === 6 && findJokbo(pl.hand, state.rules)) out.push({ type: 'declare', p });
+          for (const c of pl.hand) out.push({ type: 'discard', p, card: c });
+        }
+        break;
+      case 'claim':
+        if (state.claim && state.claim.p === p) {
+          out.push({ type: 'claim', p });
+          out.push({ type: 'pass', p });
+        }
+        break;
+      case 'roundEnd':
+        out.push({ type: 'next', p });
+        break;
+    }
+    return out;
+  }
+
+  function advance(state, q, ev) {
+    state.turn = q;
+    if (state.deck.length === 0) {
+      ev.push({ t: 'exhaust' });
+      endRound(state, { kind: 'exhaust' }, ev);
+    } else {
+      state.phase = 'draw';
+      ev.push({ t: 'turn', p: q });
+    }
+  }
+
+  function endRound(state, info, ev) {
+    const r = state.rules;
+    const P = state.players;
+    const n = P.length;
+    const totals = P.map((pl) => handTotal(pl.hand, r));
+    const scores = totals.slice();
+    const notes = P.map(() => []);
+    let success = null;
+    if (info.kind === 'bak' || info.kind === 'jayeon') {
+      scores[info.p] = 0;
+      notes[info.p].push(info.kind === 'bak' ? '박' : '자연바가지');
+      scores[info.from] = totals[info.from] + r.bagaji;
+      notes[info.from].push('바가지 +' + r.bagaji);
+    } else if (info.kind === 'stop') {
+      const mine = totals[info.p];
+      success = totals.every((t, i) => i === info.p || t > mine); // 같은 점수가 있으면 실패
+      if (success) { scores[info.p] = 0; notes[info.p].push('스톱 성공'); }
+      else { scores[info.p] = mine + r.stopPenalty; notes[info.p].push('스톱 실패 +' + r.stopPenalty); }
+    } else if (info.kind === 'jokbo') {
+      scores[info.p] = info.jokbo.score;
+      notes[info.p].push(info.jokbo.name);
+    }
+    // 다음 선: 이번 판 점수가 가장 낮은 사람 (동점이면 지금 선부터 차례 순서로 먼저인 사람)
+    let best = -1;
+    for (let k = 0; k < n; k++) {
+      const i = (state.dealer + k) % n;
+      if (best < 0 || scores[i] < scores[best]) best = i;
+    }
+    P.forEach((pl, i) => { pl.score += scores[i]; });
+    state.result = {
+      round: state.round,
+      kind: info.kind,
+      p: info.p == null ? -1 : info.p,
+      from: info.from == null ? -1 : info.from,
+      jokbo: info.jokbo || null,
+      success,
+      totals, scores, notes,
+      hands: P.map((pl) => pl.hand.slice()),
+      melds: P.map((pl) => pl.melds.map((m) => m.slice())),
+      cumulative: P.map((pl) => pl.score),
+      best,
+      nextDealer: best,
+      last: state.round >= state.rounds,
+    };
+    state.history.push({ round: state.round, kind: info.kind, p: state.result.p, scores: scores.slice() });
+    state.phase = 'roundEnd';
+    state.claim = null;
+    ev.push({ t: 'roundEnd', result: state.result });
+  }
+
+  function apply(state, a) {
+    if (!a || typeof a.type !== 'string') throw new Error('잘못된 행동이에요');
+    const p = a.p;
+    const n = state.players.length;
+    const pl = state.players[p];
+    const ev = [];
+    const fail = (msg) => { throw new Error(msg); };
+    if (a.type !== 'next' && !pl) fail('없는 플레이어예요');
+    switch (a.type) {
+      case 'draw': {
+        if (state.phase !== 'draw' || state.turn !== p) fail('지금은 패를 가져올 수 없어요');
+        const card = state.deck.pop();
+        pl.hand.push(card);
+        pl.drawsSinceMeld += 1;
+        state.phase = 'discard';
+        ev.push({ t: 'draw', p, card });
+        break;
+      }
+      case 'stop': {
+        if (!canStop(state, p)) fail('지금은 스톱할 수 없어요');
+        ev.push({ t: 'stop', p });
+        endRound(state, { kind: 'stop', p }, ev);
+        break;
+      }
+      case 'declare': {
+        if (state.phase !== 'discard' || state.turn !== p || pl.hand.length !== 6) fail('지금은 족보를 낼 수 없어요');
+        const jk = findJokbo(pl.hand, state.rules);
+        if (!jk) fail('족보가 아니에요');
+        ev.push({ t: 'declare', p, jokbo: jk });
+        endRound(state, { kind: 'jokbo', p, jokbo: jk }, ev);
+        break;
+      }
+      case 'discard': {
+        if (state.phase !== 'discard' || state.turn !== p) fail('지금은 버릴 수 없어요');
+        const idx = pl.hand.indexOf(a.card);
+        if (idx < 0) fail('손에 없는 패예요');
+        pl.hand.splice(idx, 1);
+        state.pile.push({ card: a.card, by: p, kind: 'discard' });
+        ev.push({ t: 'discard', p, card: a.card });
+        const q = findClaimer(state, p, a.card);
+        if (q >= 0) {
+          const kind = claimKind(state.players[q].hand, a.card);
+          state.claim = { p: q, from: p, card: a.card, kind };
+          state.phase = 'claim';
+          ev.push({ t: 'claimChance', p: q, from: p, card: a.card, kind });
+        } else {
+          advance(state, (p + 1) % n, ev);
+        }
+        break;
+      }
+      case 'claim': {
+        const c = state.claim;
+        if (state.phase !== 'claim' || !c || c.p !== p) fail('지금은 뽕할 수 없어요');
+        const m = monthOf(c.card);
+        const used = pl.hand.filter((x) => monthOf(x) === m).slice(0, 2);
+        pl.hand = pl.hand.filter((x) => !used.includes(x));
+        state.pile.push({ card: used[0], by: p, kind: 'meld' }, { card: used[1], by: p, kind: 'meld' });
+        pl.melds.push([c.card, used[0], used[1]]);
+        pl.drawsSinceMeld = 0;
+        state.claim = null;
+        ev.push({ t: 'claim', p, from: c.from, card: c.card, used, kind: c.kind });
+        if (c.kind === 'bak' || c.kind === 'jayeon') {
+          endRound(state, { kind: c.kind, p, from: c.from }, ev);
+        } else {
+          state.turn = p;
+          state.phase = 'discard';
+        }
+        break;
+      }
+      case 'pass': {
+        const c = state.claim;
+        if (state.phase !== 'claim' || !c || c.p !== p) fail('지금은 넘길 수 없어요');
+        state.claim = null;
+        ev.push({ t: 'pass', p });
+        advance(state, (c.from + 1) % n, ev);
+        break;
+      }
+      case 'next': {
+        if (state.phase !== 'roundEnd') fail('아직 판이 끝나지 않았어요');
+        if (state.round >= state.rounds) {
+          state.phase = 'gameEnd';
+          ev.push({ t: 'gameEnd' });
+        } else {
+          state.dealer = state.result.nextDealer;
+          deal(state);
+          ev.push({ t: 'deal', round: state.round, dealer: state.dealer });
+        }
+        break;
+      }
+      default:
+        fail('알 수 없는 행동이에요');
+    }
+    state.step += 1;
+    return ev;
+  }
+
+  // 플레이어 p가 볼 수 있는 정보만 담은 사본 (컴퓨터도 이것만 보고 판단 → 남의 패를 훔쳐보지 않음)
+  function viewFor(state, p) {
+    const reveal = state.phase === 'roundEnd' || state.phase === 'gameEnd';
+    let claim = null;
+    if (state.claim) {
+      claim = state.claim.p === p
+        ? Object.assign({}, state.claim)
+        : { pending: true, from: state.claim.from, card: state.claim.card };
+    }
+    return {
+      v: state.v, rules: state.rules, rounds: state.rounds, round: state.round, dealer: state.dealer,
+      turn: state.turn, phase: state.phase, step: state.step, me: p, claim,
+      deckCount: state.deck.length,
+      pile: state.pile.map((e) => Object.assign({}, e)),
+      players: state.players.map((pl, i) => ({
+        name: pl.name, kind: pl.kind, persona: pl.persona, score: pl.score,
+        melds: pl.melds.map((m) => m.slice()),
+        handCount: pl.hand.length,
+        drawsSinceMeld: pl.drawsSinceMeld,
+        hand: (i === p || reveal) ? pl.hand.slice() : null,
+      })),
+      result: state.result,
+      history: state.history,
+    };
+  }
+
+  // 누적 점수 순위 (낮을수록 위, 동점은 같은 순위)
+  function standings(state) {
+    const rows = state.players.map((pl, i) => ({ i, name: pl.name, score: pl.score }));
+    rows.sort((a, b) => a.score - b.score || a.i - b.i);
+    let rank = 0, prev = null;
+    rows.forEach((r, k) => { if (prev === null || r.score !== prev) rank = k + 1; r.rank = rank; prev = r.score; });
+    return rows;
+  }
+
+  return {
+    MONTH_NAMES, DEFAULT_RULES, monthOf, mulberry32, handTotal, sumMonths, findJokbo, claimKind,
+    createGame, legalActions, apply, actorOf, canStop, viewFor, standings,
+  };
+});
+</script>
+<script>
+/* 나일롱뽕 컴퓨터 플레이어
+ * viewFor()로 받은 '자기 눈에 보이는 정보'만 사용한다.
+ */
+(function (root, factory) {
+  const NP = root.NP || (typeof require === 'function' ? require('./engine.js') : null);
+  const api = factory(NP);
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.NPAI = api;
+})(typeof self !== 'undefined' ? self : this, function (NP) {
+  'use strict';
+  const M = NP.monthOf;
+
+  // stopAt: 스톱 성공 확률이 이 이상이면 스톱 / danger: 남에게 뽕·박 줄 패를 꺼리는 정도 / noise: 판단 흔들림
+  const PERSONAS = {
+    careful: { stopAt: 0.74, danger: 1.35, noise: 0.2 },
+    normal: { stopAt: 0.64, danger: 1.0, noise: 0.3 },
+    bold: { stopAt: 0.54, danger: 0.75, noise: 0.45 },
+  };
+
+  function comb(n, k) {
+    if (k < 0 || k > n) return 0;
+    let r = 1;
+    for (let i = 1; i <= k; i++) r = (r * (n - k + i)) / i;
+    return r;
+  }
+
+  // 모르는 패 N장 중 해당 월이 K장일 때, h장을 쥔 사람이 그 월을 2장 이상 가졌을 확률
+  function pAtLeast2(N, K, h) {
+    if (K < 2 || h < 2 || N < h) return 0;
+    const tot = comb(N, h);
+    if (!tot) return 0;
+    return Math.max(0, 1 - (comb(N - K, h) + K * comb(N - K, h - 1)) / tot);
+  }
+
+  function knowledge(view) {
+    const me = view.players[view.me];
+    const seen = new Array(13).fill(0);
+    const mine = new Array(13).fill(0);
+    const unk = new Array(13).fill(0);
+    for (const e of view.pile) seen[M(e.card)]++;
+    for (const c of me.hand) mine[M(c)]++;
+    let N = 0;
+    for (let m = 1; m <= 12; m++) { unk[m] = Math.max(0, 4 - seen[m] - mine[m]); N += unk[m]; }
+    return { seen, mine, unk, N };
+  }
+
+  // 아직 안 보인 같은 월 u장 중 하나라도 남이 버려 줄 가능성 (남은 더미가 많을수록 큼)
+  function pComplete(u, deckCount) {
+    if (u <= 0) return 0;
+    const time = Math.min(1, deckCount / 14);
+    const perCopy = 0.18 + 0.2 * time;
+    return 1 - Math.pow(1 - perCopy, u);
+  }
+
+  // 남길 손패 R의 '예상 비용' (낮을수록 좋음)
+  function handCost(R, know, view) {
+    const rules = view.rules;
+    const total = NP.handTotal(R, rules);
+    const cnt = new Array(13).fill(0);
+    for (const c of R) cnt[M(c)]++;
+    let cost = total;
+    if (R.length >= 5) {
+      const hasTriple = (except) => {
+        for (let m = 1; m <= 12; m++) if (m !== except && cnt[m] === 3) return true;
+        return false;
+      };
+      for (let m = 1; m <= 12; m++) {
+        if (cnt[m] < 2) continue;
+        const p = pComplete(know.unk[m], view.deckCount);
+        if (!p) continue;
+        let gain;
+        if (cnt[m] === 2 && hasTriple(m)) {
+          gain = total + 10; // 자연뽕 + 이 짝 → 뽕 한 번이면 끝(자연바가지)
+        } else {
+          // 뽕하면 짝 2장이 빠지고, 남은 3장 중 좋은 2장만 쥠
+          const rest = [];
+          let skipped = 0;
+          for (const c of R) {
+            if (M(c) === m && skipped < 2) { skipped++; continue; }
+            rest.push(M(c));
+          }
+          rest.sort((a, b) => a - b);
+          const after = (rest[0] || 0) + (rest[1] || 0);
+          gain = Math.max(0, total - after);
+        }
+        cost -= p * gain;
+      }
+    } else if (R.length === 2) {
+      const a = M(R[0]), b = M(R[1]);
+      if (a === b) {
+        const p = pComplete(know.unk[a], view.deckCount);
+        cost -= p * (total + 10); // 박 기대
+      }
+      if (total <= rules.stopLimit) cost -= 1.5;
+    }
+    return cost;
+  }
+
+  // 월 m을 버렸을 때 남에게 뽕/박을 줄 위험
+  function dangerOf(m, know, view) {
+    const u = know.unk[m];
+    if (u < 2) return 0; // 남은 패가 1장 이하면 아무도 뽕 못 함
+    let d = 0;
+    view.players.forEach((pl, i) => {
+      if (i === view.me) return;
+      const h = pl.handCount;
+      if (h === 2) {
+        const base = comb(u, 2) / Math.max(1, comb(know.N, 2));
+        const bias = 4 + Math.min(5, pl.drawsSinceMeld * 1.5); // 뽕한 사람은 짝을 남기려 함
+        d += Math.min(0.9, base * bias) * (view.rules.bagaji + 12);
+      } else if (h >= 5) {
+        d += pAtLeast2(know.N, u, h) * 4;
+      }
+    });
+    return d;
+  }
+
+  function chooseDiscard(view, persona, rng) {
+    const me = view.players[view.me];
+    const hand = me.hand;
+    const know = knowledge(view);
+    const per = PERSONAS[persona] || PERSONAS.normal;
+    let best = hand[hand.length - 1];
+    let bestCost = Infinity;
+    const tried = new Set();
+    // 같은 월은 어느 장을 버려도 같으므로 월마다 한 번만 따짐
+    const sorted = hand.slice().sort((a, b) => a - b);
+    for (const c of sorted) {
+      const m = M(c);
+      if (tried.has(m)) continue;
+      tried.add(m);
+      const R = hand.filter((x) => x !== c);
+      let cost = handCost(R, know, view) + per.danger * dangerOf(m, know, view);
+      cost += (rng() - 0.5) * per.noise;
+      if (cost < bestCost) { bestCost = cost; best = c; }
+    }
+    return best;
+  }
+
+  // 스톱 성공 확률(내가 가장 낮을 확률)을 모의로 추정
+  function stopChance(view, rng, trials) {
+    const me = view.players[view.me];
+    const mine = NP.handTotal(me.hand, view.rules);
+    const know = knowledge(view);
+    const pool = [];
+    for (let m = 1; m <= 12; m++) for (let k = 0; k < know.unk[m]; k++) pool.push(m);
+    const opps = [];
+    view.players.forEach((pl, i) => { if (i !== view.me) opps.push(pl); });
+    const T = trials || 400;
+    let win = 0;
+    const arr = pool.slice();
+    for (let t = 0; t < T; t++) {
+      let top = arr.length;
+      const take = (k) => {
+        const out = [];
+        for (let j = 0; j < k && top > 0; j++) {
+          const r = Math.floor(rng() * top);
+          top--;
+          const tmp = arr[r]; arr[r] = arr[top]; arr[top] = tmp;
+          out.push(arr[top]);
+        }
+        return out;
+      };
+      let ok = true;
+      for (const o of opps) {
+        const h = o.handCount;
+        // 상대도 낮은 패를 남기려 하므로, 본 장수 중 낮은 h장을 쥐었다고 봄
+        const seenCards = h <= 3 ? Math.min(6, h + 1 + o.drawsSinceMeld) : h + 1;
+        const cards = take(seenCards).sort((a, b) => a - b).slice(0, h);
+        let s = 0;
+        for (const x of cards) s += x;
+        if (s <= mine) { ok = false; break; }
+      }
+      if (ok) win++;
+    }
+    return win / T;
+  }
+
+  function shouldStop(view, persona, rng) {
+    const me = view.players[view.me];
+    if (NP.handTotal(me.hand, view.rules) > view.rules.stopLimit) return false;
+    const per = PERSONAS[persona] || PERSONAS.normal;
+    return stopChance(view, rng) >= per.stopAt;
+  }
+
+  // 지금 이 컴퓨터가 할 행동 하나를 고름 (할 일이 없으면 null)
+  function decide(view, persona, rng) {
+    const p = view.me;
+    const me = view.players[p];
+    rng = rng || Math.random;
+    switch (view.phase) {
+      case 'claim':
+        if (view.claim && view.claim.p === p) return { type: 'claim', p };
+        return null;
+      case 'draw':
+        if (view.turn !== p) return null;
+        if (shouldStop(view, persona, rng)) return { type: 'stop', p };
+        return { type: 'draw', p };
+      case 'discard':
+        if (view.turn !== p) return null;
+        if (me.hand.length === 6 && NP.findJokbo(me.hand, view.rules)) return { type: 'declare', p };
+        return { type: 'discard', p, card: chooseDiscard(view, persona, rng) };
+      default:
+        return null;
+    }
+  }
+
+  return { PERSONAS, decide, chooseDiscard, shouldStop, stopChance, knowledge, pAtLeast2 };
+});
+</script>
+<script>
+(() => {
+  'use strict';
+  const M = NP.monthOf;
+  const MONTHS = NP.MONTH_NAMES;
+  const HUMAN = 0;
+  const STORE_KEY = 'nylonppong.v1';
+  const $ = (s, el = document) => el.querySelector(s);
+  const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // 컴퓨터 자리: 1번이 내 오른쪽(내 다음 차례), 반시계 방향
+  const CPU = [
+    { name: '삼촌', short: '삼', persona: 'bold', av: 'var(--av-1)' },
+    { name: '할머니', short: '할', persona: 'careful', av: 'var(--av-2)' },
+    { name: '이모', short: '이', persona: 'normal', av: 'var(--av-3)' },
+  ];
+  const ME = { name: '나', short: '나', av: 'var(--seal)' };
+
+  const DEFAULTS = { cpu: 3, rounds: 5, speed: 'normal', rules: Object.assign({}, NP.DEFAULT_RULES) };
+
+  /* ───────── 화투패 그림 (12달) ───────── */
+  const C = {
+    ink: '#1c1913', red: '#c8321e', pine: '#205c40', pineD: '#123b29', brown: '#4b3424', pink: '#e8879d', pinkL: '#f5c4cf',
+    violet: '#5b4aa3', yel: '#e5b33c', orange: '#c8791f', leaf: '#3f7b3a', leafD: '#2a5a2b', maple: '#d33c22', mapleD: '#a92d1a',
+    moon: '#f8f1dd', sky: '#b8301d', blue: '#2f4f8d', willow: '#2e4b2c', rain: '#3e4e6e', crimson: '#a8233a',
+  };
+  const fx2 = (n) => Math.round(n * 100) / 100;
+  const rad = (d) => (d * Math.PI) / 180;
+  function sector(cx, cy, r, a0, a1, fill, ribs, ribColor) {
+    const p = (a, rr) => [fx2(cx + rr * Math.cos(rad(a))), fx2(cy - rr * Math.sin(rad(a)))];
+    const [x0, y0] = p(a0, r), [x1, y1] = p(a1, r);
+    let s = `<path d="M${cx} ${cy}L${x0} ${y0}A${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 0 ${x1} ${y1}Z" fill="${fill}"/>`;
+    if (ribs) {
+      let d = '';
+      for (let i = 1; i < ribs; i++) { const [x, y] = p(a0 + ((a1 - a0) * i) / ribs, r * 0.97); d += `M${cx} ${cy}L${x} ${y}`; }
+      s += `<path d="${d}" stroke="${ribColor}" stroke-width="0.55" fill="none"/>`;
+    }
+    return s;
+  }
+  function blossom(cx, cy, r, petal, center, rot = 0) {
+    let s = '';
+    for (let i = 0; i < 5; i++) {
+      const a = rad(rot + i * 72);
+      s += `<circle cx="${fx2(cx + r * 0.55 * Math.cos(a))}" cy="${fx2(cy + r * 0.55 * Math.sin(a))}" r="${fx2(r * 0.5)}" fill="${petal}"/>`;
+    }
+    return s + `<circle cx="${cx}" cy="${cy}" r="${fx2(r * 0.26)}" fill="${center}"/>`;
+  }
+  function leaf(x, y, L, W, deg, fill, vein) {
+    return `<g transform="translate(${fx2(x)} ${fx2(y)}) rotate(${fx2(deg)})"><path d="M0 0Q${fx2(L * 0.5)} ${fx2(-W)} ${fx2(L)} 0Q${fx2(L * 0.5)} ${fx2(W)} 0 0Z" fill="${fill}"/>${vein ? `<path d="M0 0L${fx2(L * 0.9)} 0" stroke="${vein}" stroke-width="0.5"/>` : ''}</g>`;
+  }
+  function strand(x0, y0, cx, cy, x1, y1, n, fill, stem, L) {
+    let s = `<path d="M${x0} ${y0}Q${cx} ${cy} ${x1} ${y1}" stroke="${stem}" stroke-width="0.9" fill="none"/>`;
+    for (let i = 1; i <= n; i++) {
+      const t = i / (n + 0.6);
+      const x = (1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * cx + t * t * x1;
+      const y = (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * cy + t * t * y1;
+      const dx = 2 * (1 - t) * (cx - x0) + 2 * t * (x1 - cx), dy = 2 * (1 - t) * (cy - y0) + 2 * t * (y1 - cy);
+      const ang = (Math.atan2(dy, dx) * 180) / Math.PI;
+      s += leaf(x, y, L, L * 0.36, ang + 38, fill) + leaf(x, y, L, L * 0.36, ang - 38, fill);
+    }
+    return s + leaf(x1, y1, L * 0.9, L * 0.34, (Math.atan2(y1 - cy, x1 - cx) * 180) / Math.PI, fill);
+  }
+  function maple(cx, cy, r, fill, rot = 0) {
+    const pts = [];
+    for (let i = 0; i < 14; i++) {
+      const a = rad(rot - 90 + (i * 180) / 7);
+      const rr = i % 2 ? r * 0.44 : r;
+      pts.push(`${fx2(cx + rr * Math.cos(a))},${fx2(cy + rr * Math.sin(a))}`);
+    }
+    return `<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${fill}" stroke-width="0.8" stroke-linejoin="round"/><path d="M${cx} ${cy}l${fx2(Math.sin(rad(rot)) * -r * 1.15)} ${fx2(Math.cos(rad(rot)) * r * 1.15)}" stroke="${C.ink}" stroke-width="0.6"/>`;
+  }
+  function chrys(cx, cy, r, fill, inner, center, n) {
+    let s = '';
+    for (let i = 0; i < n; i++) s += `<ellipse cx="${cx}" cy="${fx2(cy - r * 0.56)}" rx="${fx2(r * 0.15)}" ry="${fx2(r * 0.46)}" fill="${fill}" transform="rotate(${fx2((i * 360) / n)} ${cx} ${cy})"/>`;
+    for (let i = 0; i < n; i++) s += `<ellipse cx="${cx}" cy="${fx2(cy - r * 0.3)}" rx="${fx2(r * 0.12)}" ry="${fx2(r * 0.28)}" fill="${inner}" transform="rotate(${fx2((i * 360) / n + 180 / n)} ${cx} ${cy})"/>`;
+    return s + `<circle cx="${cx}" cy="${cy}" r="${fx2(r * 0.2)}" fill="${center}"/>`;
+  }
+  function peony(cx, cy, r) {
+    let s = '';
+    for (let i = 0; i < 9; i++) { const a = rad(i * 40); s += `<circle cx="${fx2(cx + r * 0.62 * Math.cos(a))}" cy="${fx2(cy + r * 0.62 * Math.sin(a))}" r="${fx2(r * 0.42)}" fill="${C.red}"/>`; }
+    for (let i = 0; i < 6; i++) { const a = rad(i * 60 + 20); s += `<circle cx="${fx2(cx + r * 0.3 * Math.cos(a))}" cy="${fx2(cy + r * 0.3 * Math.sin(a))}" r="${fx2(r * 0.3)}" fill="#e2634e"/>`; }
+    return s + `<circle cx="${cx}" cy="${cy}" r="${fx2(r * 0.15)}" fill="${C.yel}"/>`;
+  }
+  function iris(cx, cy, s) {
+    return `<ellipse cx="${cx}" cy="${fx2(cy - s * 0.5)}" rx="${fx2(s * 0.24)}" ry="${fx2(s * 0.52)}" fill="${C.violet}"/>` +
+      `<ellipse cx="${fx2(cx - s * 0.42)}" cy="${fx2(cy + s * 0.12)}" rx="${fx2(s * 0.22)}" ry="${fx2(s * 0.5)}" fill="${C.violet}" transform="rotate(52 ${fx2(cx - s * 0.42)} ${fx2(cy + s * 0.12)})"/>` +
+      `<ellipse cx="${fx2(cx + s * 0.42)}" cy="${fx2(cy + s * 0.12)}" rx="${fx2(s * 0.22)}" ry="${fx2(s * 0.5)}" fill="${C.violet}" transform="rotate(-52 ${fx2(cx + s * 0.42)} ${fx2(cy + s * 0.12)})"/>` +
+      `<circle cx="${cx}" cy="${fx2(cy + s * 0.05)}" r="${fx2(s * 0.13)}" fill="${C.yel}"/>`;
+  }
+  function heartLeaf(cx, cy, r, rot, fill) {
+    return `<g transform="translate(${cx} ${cy}) rotate(${rot})"><path d="M0 ${fx2(r)}C${fx2(-r * 1.25)} ${fx2(r * 0.15)} ${fx2(-r * 0.95)} ${fx2(-r)} 0 ${fx2(-r * 0.42)}C${fx2(r * 0.95)} ${fx2(-r)} ${fx2(r * 1.25)} ${fx2(r * 0.15)} 0 ${fx2(r)}Z" fill="${fill}"/><path d="M0 ${fx2(-r * 0.38)}L0 ${fx2(r * 0.9)}M0 ${fx2(r * 0.1)}L${fx2(-r * 0.5)} ${fx2(-r * 0.25)}M0 ${fx2(r * 0.1)}L${fx2(r * 0.5)} ${fx2(-r * 0.25)}" stroke="#4a4a35" stroke-width="0.6" fill="none"/></g>`;
+  }
+  function willow(x, len, sway, color) {
+    let s = `<path d="M${x} -2Q${fx2(x + sway)} ${fx2(len * 0.5)} ${fx2(x + sway * 0.6)} ${len}" stroke="${color}" stroke-width="1" fill="none"/>`;
+    for (let y = 6; y < len; y += 5.5) {
+      const t = y / len;
+      const px = (1 - t) * (1 - t) * x + 2 * (1 - t) * t * (x + sway) + t * t * (x + sway * 0.6);
+      s += `<ellipse cx="${fx2(px + 1.6)}" cy="${y}" rx="0.9" ry="2.4" fill="${color}" transform="rotate(-24 ${fx2(px + 1.6)} ${y})"/><ellipse cx="${fx2(px - 1.6)}" cy="${y + 2}" rx="0.9" ry="2.4" fill="${color}" transform="rotate(24 ${fx2(px - 1.6)} ${y + 2})"/>`;
+    }
+    return s;
+  }
+
+  const ART = {
+    1: `<circle cx="34" cy="18" r="10.5" fill="${C.red}"/>` +
+      `<path d="M9 80C11 67 14 57 20 47S28 35 31 31" stroke="${C.brown}" stroke-width="2.6" fill="none" stroke-linecap="round"/>` +
+      sector(31, 41, 11, 15, 165, C.pine, 9, C.pineD) + sector(12, 55, 13, 15, 165, C.pine, 10, C.pineD) +
+      sector(36, 66, 13, 15, 165, C.pine, 10, C.pineD) + sector(11, 77, 10, 15, 165, C.pineD, 8, '#0a2a1b'),
+    2: `<path d="M3 78C10 64 14 58 20 50C26 42 30 36 34 26C37 18 40 12 46 5" stroke="${C.ink}" stroke-width="2.6" fill="none" stroke-linecap="round"/>` +
+      `<path d="M20 50C27 52 33 50 40 44M30 35C24 31 20 26 18 18M13 61C8 57 6 51 5 45" stroke="${C.ink}" stroke-width="1.5" fill="none" stroke-linecap="round"/>` +
+      blossom(40, 44, 7, C.red, C.yel, 10) + blossom(18, 18, 6.5, C.red, C.yel, 30) + blossom(5, 45, 5.5, C.red, C.yel, 0) +
+      blossom(34, 26, 6, C.red, C.yel, 50) + blossom(26, 48, 5, C.red, C.yel, 20) + blossom(45, 7, 5, C.red, C.yel, 40) + blossom(12, 62, 5.5, C.red, C.yel, 15),
+    3: `<path d="M0 54C10 48 18 44 28 42C37 40 44 33 50 26" stroke="${C.ink}" stroke-width="2" fill="none"/>` +
+      [[9, 12, 7, 1], [22, 8, 6.5, 0], [35, 12, 7, 1], [46, 20, 6, 0], [14, 25, 6.5, 0], [27, 22, 7, 1], [40, 31, 6.5, 1], [6, 37, 6, 1], [19, 37, 6.5, 0], [31, 45, 6, 0], [10, 50, 5, 1], [45, 43, 5, 0]]
+        .map(([x, y, r, k], i) => blossom(x, y, r, k ? C.pink : C.pinkL, k ? '#fff4f6' : C.pink, i * 23)).join('') +
+      `<ellipse cx="24" cy="62" rx="1.6" ry="1" fill="${C.pink}"/><ellipse cx="36" cy="68" rx="1.6" ry="1" fill="${C.pink}"/><ellipse cx="14" cy="72" rx="1.6" ry="1" fill="${C.pinkL}"/>`,
+    4: strand(8, -2, 6, 30, 11, 60, 7, C.ink, C.ink, 6) + strand(20, -2, 25, 36, 18, 74, 8, C.ink, C.ink, 6.5) +
+      strand(32, -2, 28, 28, 34, 58, 6, C.ink, C.ink, 6) + strand(43, -2, 48, 34, 42, 70, 8, C.ink, C.ink, 6) +
+      `<circle cx="14" cy="66" r="1.4" fill="${C.red}"/><circle cx="23" cy="77" r="1.4" fill="${C.red}"/><circle cx="37" cy="62" r="1.4" fill="${C.red}"/><circle cx="45" cy="74" r="1.4" fill="${C.red}"/>`,
+    5: `<g stroke="${C.leaf}" stroke-width="2.3" fill="none" stroke-linecap="round"><path d="M8 82Q10 56 4 30"/><path d="M15 82Q16 52 20 22"/><path d="M24 82Q22 60 14 44"/><path d="M31 82Q32 58 38 34"/><path d="M40 82Q42 64 47 46"/><path d="M45 82Q40 66 30 56"/></g>` +
+      iris(19, 26, 13) + iris(37, 38, 12) + iris(12, 50, 9.5),
+    6: leaf(25, 58, 22, 6, 120, C.leafD, '#16341a') + leaf(25, 58, 20, 6, 60, C.leafD, '#16341a') + leaf(25, 58, 18, 5, 95, C.leaf, '#16341a') +
+      leaf(25, 52, 17, 5.5, 165, C.leaf, '#16341a') + leaf(25, 52, 17, 5.5, 15, C.leaf, '#16341a') +
+      peony(25, 32, 15) + peony(40, 66, 7),
+    7: strand(-2, 4, 26, -4, 44, 40, 7, C.crimson, C.ink, 6) + strand(4, 22, 30, 18, 38, 66, 7, C.red, C.ink, 6) +
+      strand(-2, 42, 18, 40, 22, 78, 5, C.crimson, C.ink, 5.5) +
+      `<circle cx="44" cy="12" r="2" fill="${C.pinkL}"/><circle cx="47" cy="17" r="1.6" fill="${C.pink}"/><circle cx="8" cy="64" r="1.8" fill="${C.pink}"/>`,
+    8: '<use href="#m8sky"/><use href="#m8hill"/>',
+    9: `<path d="M26 80Q26 60 26 40M13 80Q13 70 12 60" stroke="${C.leafD}" stroke-width="1.6" fill="none"/>` +
+      leaf(26, 66, 13, 5, -150, C.leaf, '#1f4a20') + leaf(26, 60, 13, 5, -30, C.leaf, '#1f4a20') + leaf(13, 74, 11, 4, -150, C.leaf, '#1f4a20') + leaf(26, 52, 12, 4.5, -40, C.leafD, '#1f4a20') +
+      chrys(26, 28, 14, C.yel, '#f0cb5e', C.orange, 18) + chrys(12, 56, 8.5, C.yel, '#f0cb5e', C.orange, 14),
+    10: `<path d="M2 76Q14 54 22 42T46 4M22 42Q32 44 40 54M16 54Q8 50 4 40" stroke="${C.ink}" stroke-width="1.2" fill="none"/>` +
+      maple(16, 17, 10, C.maple, -8) + maple(36, 26, 11, C.maple, 12) + maple(9, 40, 8.5, C.mapleD, -18) + maple(40, 54, 10, C.maple, 6) +
+      maple(22, 62, 9, C.mapleD, 18) + maple(39, 74, 7, C.maple, -6),
+    11: `<path d="M24 46L24 6" stroke="#6b4b2a" stroke-width="1.4"/>` +
+      [8, 13, 18, 23, 28, 33, 38].map((y, i) => `<circle cx="${i % 2 ? 21 : 27}" cy="${y}" r="3.2" fill="${i % 3 ? C.yel : '#d68a2a'}"/>`).join('') +
+      heartLeaf(13, 60, 12, 18, C.ink) + heartLeaf(37, 58, 13, -16, C.ink) + heartLeaf(25, 70, 12, 0, '#24221b'),
+    12: willow(6, 74, 6, C.willow) + willow(16, 60, -5, C.willow) + willow(28, 70, 6, C.willow) + willow(40, 56, -4, C.willow) + willow(48, 72, 4, C.willow) +
+      `<path d="M10 22l-3 8M22 14l-3 8M34 26l-3 8M44 10l-3 8M14 46l-3 8M30 52l-3 8M42 40l-3 8M20 66l-3 8M38 70l-3 8" stroke="${C.rain}" stroke-width="0.7" opacity="0.75"/>`,
+  };
+  const EXTRA = {
+    m8sky: `<rect x="-5" y="-5" width="60" height="60" fill="${C.sky}"/>`,
+    m8hill: `<path d="M-5 85L-5 42C6 32 18 29 28 35C37 40 45 35 55 30L55 85Z" fill="${C.ink}"/>` +
+      `<path d="M7 52q2-6 6-9M15 60q3-7 7-10M25 54q2-6 6-8M33 64q3-7 7-9M42 52q2-5 6-7M10 70q3-6 7-9M28 74q3-6 7-8M44 72q2-5 5-7" stroke="${C.moon}" stroke-width="0.8" fill="none" opacity="0.85"/>`,
+    g1: `<ellipse cx="22" cy="61" rx="10" ry="5.2" fill="${C.moon}" stroke="${C.ink}" stroke-width="0.6"/><path d="M12 61l-5 3 6 1z" fill="${C.ink}"/>` +
+      `<path d="M30 58Q33 52 33 44" stroke="${C.ink}" stroke-width="3.2" fill="none" stroke-linecap="round"/><path d="M30 58Q33 52 33 44" stroke="${C.moon}" stroke-width="2" fill="none" stroke-linecap="round"/>` +
+      `<circle cx="33.5" cy="43" r="2.2" fill="${C.moon}" stroke="${C.ink}" stroke-width="0.5"/><circle cx="33.4" cy="41.6" r="1" fill="${C.red}"/><path d="M35.4 43.4l4.4 1.2" stroke="${C.ink}" stroke-width="0.9"/>` +
+      `<path d="M20 66v10M25 66v10" stroke="${C.ink}" stroke-width="0.8"/>`,
+    g3: `<rect x="-2" y="56" width="54" height="30" fill="${C.red}"/>` +
+      `<path d="M-2 56q4.5 6 9 0q4.5 6 9 0q4.5 6 9 0q4.5 6 9 0q4.5 6 9 0q4.5 6 9 0v-3h-54z" fill="${C.moon}"/>` +
+      `<path d="M-2 66h54M-2 74h54" stroke="${C.moon}" stroke-width="1.2"/><circle cx="12" cy="70" r="2.4" fill="${C.moon}"/><circle cx="38" cy="70" r="2.4" fill="${C.moon}"/>`,
+    g8: `<circle cx="25" cy="19" r="12.5" fill="${C.moon}"/><use href="#m8hill"/>`,
+    g12: `<path d="M8 42A17 12 0 0 1 42 42Z" fill="${C.red}" stroke="${C.ink}" stroke-width="0.6"/><path d="M25 30L13 42M25 30L25 42M25 30L37 42" stroke="${C.mapleD}" stroke-width="0.6"/><path d="M25 42v20q0 3 -3 3" stroke="${C.ink}" stroke-width="1.4" fill="none"/>`,
+    y2: `<ellipse cx="34" cy="63" rx="6.5" ry="4" fill="#9fae3c" transform="rotate(-18 34 63)"/><circle cx="40" cy="59" r="2.7" fill="#9fae3c"/><path d="M42.4 58.6l2.8 0.2-2.6 1.2" fill="${C.ink}"/><circle cx="40.6" cy="58.4" r="0.6" fill="${C.ink}"/><path d="M28 66l-6 3" stroke="#6f7a2a" stroke-width="2"/>`,
+    y5: `<path d="M-2 70l14-6 14 6 14-6 14 6v5l-14-6-14 6-14-6-14 6z" fill="#7a5a34" stroke="${C.ink}" stroke-width="0.5"/>`,
+    y6: `<g transform="translate(37 64)"><path d="M0 0C-6 -8 -10 -2 -7 3C-5 6 -2 4 0 0C2 4 5 6 7 3C10 -2 6 -8 0 0Z" fill="${C.yel}" stroke="${C.ink}" stroke-width="0.6"/><path d="M0 -1v6" stroke="${C.ink}" stroke-width="1"/><circle cx="-5" cy="0" r="1.2" fill="${C.blue}"/><circle cx="5" cy="0" r="1.2" fill="${C.blue}"/></g>`,
+    y8: `<path d="M10 14l3 2.2 3-2.2M20 9l3 2.2 3-2.2M30 15l3 2.2 3-2.2" stroke="${C.ink}" stroke-width="1.3" fill="none" stroke-linecap="round"/>`,
+    y9: `<path d="M33 68h12l-2 7h-8z" fill="${C.red}" stroke="${C.ink}" stroke-width="0.6"/><ellipse cx="39" cy="68" rx="6" ry="1.6" fill="#e05a42" stroke="${C.ink}" stroke-width="0.5"/><circle cx="39" cy="71.4" r="1.6" fill="${C.yel}"/>`,
+    y12: `<path d="M14 30q8 -6 12 2q4 -8 12 -2q-6 0 -12 8q-6 -8 -12 -8z" fill="${C.ink}"/><path d="M26 36l-3 8M26 36l3 8" stroke="${C.ink}" stroke-width="1"/>`,
+    s12: `<rect x="9" y="56" width="32" height="20" rx="3" fill="${C.red}" stroke="${C.ink}" stroke-width="0.6"/><path d="M13 56v20M19 56v20M25 56v20M31 56v20M37 56v20" stroke="${C.ink}" stroke-width="1.8"/>`,
+    s11: `<circle cx="40" cy="12" r="5" fill="${C.red}" opacity="0.9"/><circle cx="40" cy="12" r="2.4" fill="${C.yel}"/>`,
+    rh: `<g transform="rotate(-24 25 50)"><rect x="9" y="45" width="32" height="9" rx="1" fill="${C.red}" stroke="${C.ink}" stroke-width="0.6"/><path d="M15 47.4v4.2M19.5 47.4v2.6M24 47.4v4.2M28.5 47.4v4.2M33 47.4v2.6" stroke="${C.ink}" stroke-width="1"/></g>`,
+    rc: `<g transform="rotate(-24 25 50)"><rect x="9" y="45" width="32" height="9" rx="1" fill="${C.blue}" stroke="${C.ink}" stroke-width="0.6"/><path d="M15 47.4v4.2M19.5 47.4v2.6M24 47.4v4.2M28.5 47.4v4.2M33 47.4v2.6" stroke="${C.moon}" stroke-width="1"/></g>`,
+    rch: `<g transform="rotate(-24 25 50)"><rect x="9" y="45" width="32" height="9" rx="1" fill="${C.red}" stroke="${C.ink}" stroke-width="0.6"/></g>`,
+    rt: `<g transform="rotate(-24 25 50)"><rect x="9" y="45" width="32" height="9" rx="1" fill="${C.red}" stroke="${C.ink}" stroke-width="0.6"/><path d="M14 45l-4 9M22 45l-4 9M30 45l-4 9M38 45l-4 9" stroke="${C.moon}" stroke-width="1.6"/></g>`,
+    gw: `<circle cx="41.5" cy="8.5" r="6.2" fill="${C.red}" stroke="${C.moon}" stroke-width="1.1"/><text x="41.5" y="11.4" font-size="8.4" text-anchor="middle" fill="${C.moon}" font-weight="700" font-family="'Noto Serif CJK KR','Noto Serif KR','Apple SD Gothic Neo','Batang',serif">光</text>`,
+  };
+  // 각 월 네 장의 모양새 (게임 점수와는 상관없이 보기 좋으라고 넣은 것)
+  const TYPES = {
+    1: ['gwang', 'hong', 'pi', 'pi'], 2: ['yeol', 'hong', 'pi', 'pi'], 3: ['gwang', 'hong', 'pi', 'pi'],
+    4: ['yeol', 'cho', 'pi', 'pi'], 5: ['yeol', 'cho', 'pi', 'pi'], 6: ['yeol', 'cheong', 'pi', 'pi'],
+    7: ['yeol', 'cho', 'pi', 'pi'], 8: ['gwang', 'yeol', 'pi', 'pi'], 9: ['yeol', 'cheong', 'pi', 'pi'],
+    10: ['yeol', 'cheong', 'pi', 'pi'], 11: ['gwang', 'pi', 'pi', 'ssang'], 12: ['gwang', 'yeol', 'tti', 'ssang'],
+  };
+  function buildSprite() {
+    let defs = '';
+    for (let m = 1; m <= 12; m++) defs += `<g id="m${m}">${ART[m]}</g>`;
+    for (const k in EXTRA) defs += `<g id="${k}">${EXTRA[k]}</g>`;
+    $('#sprite').innerHTML = `<defs>${defs}</defs>`;
+  }
+  function artFor(id) {
+    const m = M(id), type = TYPES[m][id & 3];
+    let s = `<use href="#m${m}"/>`;
+    if (type === 'gwang') s += (EXTRA['g' + m] ? `<use href="#g${m}"/>` : '') + '<use href="#gw"/>';
+    else if (type === 'yeol' && EXTRA['y' + m]) s += `<use href="#y${m}"/>`;
+    else if (type === 'hong') s += '<use href="#rh"/>';
+    else if (type === 'cheong') s += '<use href="#rc"/>';
+    else if (type === 'cho') s += '<use href="#rch"/>';
+    else if (type === 'tti') s += '<use href="#rt"/>';
+    else if (type === 'ssang' && EXTRA['s' + m]) s += `<use href="#s${m}"/>`;
+    return s;
+  }
+  const cardName = (id) => `${M(id)}월 ${MONTHS[M(id)]}`;
+  function makeCard(id, tag = 'div', extra = '') {
+    const c = el(tag, 'card face ' + extra);
+    c.dataset.id = id;
+    c.innerHTML = `<svg viewBox="0 0 50 80" aria-hidden="true">${artFor(id)}</svg><b class="n" aria-hidden="true">${M(id)}</b>`;
+    if (tag === 'button') { c.type = 'button'; c.setAttribute('aria-label', cardName(id)); }
+    else { c.setAttribute('role', 'img'); c.setAttribute('aria-label', cardName(id)); }
+    return c;
+  }
+  const makeBack = (extra = '') => el('div', 'card back ' + extra);
+
+  /* ───────── 소리 ───────── */
+  const Sound = (() => {
+    let ctx = null, on = true, noiseBuf = null;
+    function ac() {
+      if (!on) return null;
+      try {
+        if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+        if (!noiseBuf) {
+          noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 0.5, ctx.sampleRate);
+          const d = noiseBuf.getChannelData(0);
+          for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+        }
+        return ctx;
+      } catch (e) { return null; }
+    }
+    function noise(dur, type, freq, q, gain, delay = 0) {
+      const a = ac(); if (!a) return;
+      const t = a.currentTime + delay;
+      const src = a.createBufferSource(); src.buffer = noiseBuf;
+      const f = a.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+      const g = a.createGain(); g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+      src.connect(f); f.connect(g); g.connect(a.destination);
+      src.start(t); src.stop(t + dur + 0.02);
+    }
+    function tone(freq, dur, type, gain, delay = 0, slide) {
+      const a = ac(); if (!a) return;
+      const t = a.currentTime + delay;
+      const o = a.createOscillator(); o.type = type; o.frequency.setValueAtTime(freq, t);
+      if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
+      const g = a.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+      o.connect(g); g.connect(a.destination);
+      o.start(t); o.stop(t + dur + 0.02);
+    }
+    return {
+      get on() { return on; },
+      set on(v) { on = !!v; },
+      unlock() { ac(); },
+      tak() { noise(0.07, 'bandpass', 2300, 1.1, 0.55); tone(150, 0.06, 'sine', 0.35, 0, 90); },
+      slam() { noise(0.16, 'lowpass', 1400, 0.7, 0.9); tone(110, 0.16, 'sine', 0.7, 0, 55); noise(0.06, 'bandpass', 2600, 1.4, 0.4, 0.02); },
+      swish() { noise(0.09, 'highpass', 3200, 0.6, 0.12); },
+      tick() { noise(0.03, 'bandpass', 3000, 2, 0.12); },
+      ping() { tone(880, 0.14, 'triangle', 0.18); tone(1320, 0.18, 'triangle', 0.12, 0.08); },
+      win() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.28, 'triangle', 0.2, i * 0.09)); },
+      lose() { [392, 330, 262].forEach((f, i) => tone(f, 0.3, 'triangle', 0.16, i * 0.12)); },
+    };
+  })();
+
+  /* ───────── 저장 ───────── */
+  function loadStore() {
+    try { const raw = localStorage.getItem(STORE_KEY); return raw ? JSON.parse(raw) : {}; } catch (e) { return {}; }
+  }
+  function saveStore() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ settings: S, sound: Sound.on, game: G && G.phase !== 'gameEnd' ? G : null })); } catch (e) { /* 저장 안 돼도 게임은 계속 */ }
+  }
+  function cleanSettings(s) {
+    const out = JSON.parse(JSON.stringify(DEFAULTS));
+    if (s && typeof s === 'object') {
+      if ([1, 2, 3].includes(s.cpu)) out.cpu = s.cpu;
+      if ([3, 5, 10].includes(s.rounds)) out.rounds = s.rounds;
+      if (['normal', 'fast'].includes(s.speed)) out.speed = s.speed;
+      if (s.rules && typeof s.rules === 'object') {
+        if ([5, 10].includes(s.rules.stopLimit)) out.rules.stopLimit = s.rules.stopLimit;
+        if ([30, 50].includes(s.rules.stopPenalty)) out.rules.stopPenalty = s.rules.stopPenalty;
+        if ([20, 30].includes(s.rules.bagaji)) out.rules.bagaji = s.rules.bagaji;
+        out.rules.chongtongStrict = !!s.rules.chongtongStrict;
+        out.rules.naturalFree = !!s.rules.naturalFree;
+      }
+    }
+    return out;
+  }
+  function validGame(g) {
+    return g && g.v === 1 && Array.isArray(g.players) && g.players.length >= 2 && Array.isArray(g.deck) && Array.isArray(g.pile) && typeof g.phase === 'string';
+  }
+
+  /* ───────── 상태 ───────── */
+  let G = null;          // 엔진 상태
+  let S = cleanSettings(null);
+  let busy = false;
+  let selected = null;
+  let timers = [];
+  let lastLine = '';
+  let preview = false;   // 시작 화면 뒤에 깔린 보기용 판
+  let gen = 0;           // 새 게임마다 올라감 (이전 게임의 애니메이션이 새 게임을 건드리지 않게)
+  let dealing = false;
+  let shownFor = null;   // 이미 자동으로 보여 준 결과 시트
+
+  const T = (ms) => (reduceMotion ? 0 : Math.round(ms * (S.speed === 'fast' ? 0.5 : 1)));
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const later = (fn, ms) => { timers.push(setTimeout(fn, ms)); };
+  const clearTimers = () => { timers.forEach(clearTimeout); timers = []; };
+  const seatInfo = (i) => (i === HUMAN ? ME : CPU[(i - 1) % CPU.length]);
+  const nameOf = (i) => (G ? G.players[i].name : seatInfo(i).name);
+  function josa(word, withB, withoutB) {
+    const ch = word.charCodeAt(word.length - 1);
+    if (ch < 0xac00 || ch > 0xd7a3) return word + withoutB;
+    return word + ((ch - 0xac00) % 28 ? withB : withoutB);
+  }
+  const subj = (i) => josa(nameOf(i), '이', '가');
+  const monthObj = (id) => `${M(id)}월(${MONTHS[M(id)]})을`;
+
+  /* ───────── 그리기 ───────── */
+  function avatarHTML(i) {
+    const info = seatInfo(i);
+    return `<span class="avatar" style="--av:${info.av}" aria-hidden="true">${info.short}</span>`;
+  }
+  function seatOrder() {
+    const n = G.players.length, out = [];
+    for (let i = n - 1; i >= 1; i--) out.push(i);
+    return out;
+  }
+  function meldChip(meld) {
+    const w = el('span', 'meld');
+    w.appendChild(makeCard(meld[0]));
+    w.appendChild(document.createTextNode('×3'));
+    w.title = `${M(meld[0])}월 뽕`;
+    return w;
+  }
+
+  function render(opt = {}) {
+    if (!G) return;
+    const actor = ['draw', 'discard', 'claim'].includes(G.phase) ? NP.actorOf(G) : -1;
+    $('#roundChip').textContent = `${G.round} / ${G.rounds}판`;
+
+    // 상대 자리
+    const seats = $('#seats');
+    seats.style.setProperty('--opp', G.players.length - 1);
+    seats.innerHTML = '';
+    for (const i of seatOrder()) {
+      const pl = G.players[i];
+      const s = el('div', 'seat' + (actor === i && !preview ? ' turn' : ''));
+      s.dataset.p = i;
+      const head = el('div', 'who');
+      head.innerHTML = `${avatarHTML(i)}<span class="name">${pl.name}</span>${G.dealer === i ? '<span class="sun" title="선">선</span>' : ''}`;
+      s.appendChild(head);
+      const row = el('div', 'seat-row');
+      const minis = el('div', 'minis');
+      let count = opt.hideHands ? 0 : pl.hand.length;
+      if (opt.seatIncoming === i) count = Math.max(0, count - 1);
+      for (let k = 0; k < count; k++) minis.appendChild(el('span', 'mini'));
+      minis.setAttribute('aria-label', `손패 ${pl.hand.length}장`);
+      if (!opt.hideHands && !pl.hand.length) minis.appendChild(el('span', 'out-tag', '다 털었음'));
+      row.appendChild(minis);
+      row.appendChild(el('span', 'seat-score', `${pl.score}점`)).title = '누적 점수';
+      s.appendChild(row);
+      if (pl.melds.length) {
+        const md = el('div', 'melds');
+        pl.melds.forEach((m) => md.appendChild(meldChip(m)));
+        s.appendChild(md);
+      }
+      if (actor === i && !preview) s.insertAdjacentHTML('beforeend', '<span class="thinking" aria-label="생각 중"><i></i><i></i><i></i></span>');
+      seats.appendChild(s);
+    }
+
+    // 더미
+    const deck = $('#deck');
+    deck.innerHTML = '';
+    const dn = opt.hidePile ? G.deck.length + 1 : G.deck.length;
+    const layers = Math.min(3, dn);
+    for (let k = layers - 1; k >= 0; k--) {
+      const b = makeBack();
+      b.style.transform = `translate(${-k * 2}px, ${-k * 2}px)`;
+      deck.appendChild(b);
+    }
+    if (!dn) deck.innerHTML = '<span class="pile-empty"></span>';
+    const myDraw = !preview && G.phase === 'draw' && G.turn === HUMAN && !busy;
+    deck.classList.toggle('can', myDraw);
+    deck.setAttribute('aria-label', `더미 ${dn}장${myDraw ? ', 눌러서 한 장 가져오기' : ''}`);
+    deck.tabIndex = myDraw ? 0 : -1;
+    $('#deckLabel').textContent = `더미 ${dn}장`;
+
+    // 버림패
+    const pile = $('#pile');
+    pile.innerHTML = '<span class="pile-empty"></span>';
+    const shown = opt.hidePile ? [] : G.pile.slice(-3);
+    shown.forEach((e, k) => {
+      const c = makeCard(e.card);
+      const top = k === shown.length - 1;
+      const depth = shown.length - 1 - k;
+      const jitter = ((e.card * 37) % 11) - 5;
+      c.style.transform = top ? 'rotate(0deg)' : `translate(${depth * -5 + jitter * 0.4}px, ${depth * -3}px) rotate(${jitter * 1.4}deg)`;
+      if (opt.pileHidden && opt.pileHidden.includes(e.card)) c.classList.add('incoming');
+      if (top) c.classList.add('top');
+      pile.appendChild(c);
+    });
+    const topE = G.pile[G.pile.length - 1];
+    let cap = '';
+    if (!opt.hidePile && topE) {
+      if (topE.by < 0) cap = '처음 뒤집은 패';
+      else if (topE.kind === 'meld') cap = topE.by === HUMAN ? '내가 뽕' : `${nameOf(topE.by)} 뽕`;
+      else cap = topE.by === HUMAN ? '내가 버림' : `${nameOf(topE.by)} 버림`;
+    }
+    $('#pileLabel').textContent = cap;
+    const iCanClaim = G.phase === 'claim' && G.claim && G.claim.p === HUMAN && !preview;
+    pile.classList.toggle('claimable', iCanClaim);
+
+    // 나온 패
+    const seen = new Array(13).fill(0), mine = new Array(13).fill(0);
+    if (!opt.hidePile) G.pile.forEach((e) => { if (!(opt.pileHidden && opt.pileHidden.includes(e.card))) seen[M(e.card)]++; });
+    if (!opt.hideHands && !preview) G.players[HUMAN].hand.forEach((c) => { if (c !== opt.incoming) mine[M(c)]++; });
+    const tr = $('#tracker');
+    tr.innerHTML = '';
+    for (let m = 1; m <= 12; m++) {
+      const cell = el('div', 'tk' + (seen[m] + mine[m] >= 3 ? ' dead' : ''));
+      let pips = '';
+      for (let k = 0; k < 4; k++) pips += `<i class="pip${k < seen[m] ? ' seen' : k < seen[m] + mine[m] ? ' mine' : ''}"></i>`;
+      cell.innerHTML = `<b>${m}</b><span class="pips">${pips}</span>`;
+      cell.title = `${m}월 ${MONTHS[m]} · 나온 패 ${seen[m]}장, 내 손 ${mine[m]}장`;
+      tr.appendChild(cell);
+    }
+
+    // 내 자리
+    const me = G.players[HUMAN];
+    const meEl = $('#me');
+    meEl.classList.toggle('turn', actor === HUMAN && !preview);
+    const total = NP.handTotal(me.hand, G.rules);
+    $('#meHead').innerHTML = `${avatarHTML(HUMAN)}<span class="name" style="font-weight:700">나</span>${G.dealer === HUMAN ? '<span class="sun" title="선">선</span>' : ''}` +
+      `${me.melds.length ? `<span class="melds" id="myMelds"></span>` : ''}` +
+      `<span class="stat">손패 합<b>${opt.hideHands || preview ? '–' : total}</b></span><span class="stat">누적<b>${me.score}</b></span>`;
+    if (me.melds.length) { const md = $('#myMelds'); me.melds.forEach((m) => md.appendChild(meldChip(m))); }
+
+    const hand = $('#hand');
+    hand.innerHTML = '';
+    const canPick = !preview && G.phase === 'discard' && G.turn === HUMAN;
+    hand.classList.toggle('pick', canPick);
+    if (!opt.hideHands) {
+      const sorted = me.hand.slice().sort((a, b) => a - b);
+      const claimM = iCanClaim ? M(G.claim.card) : 0;
+      let matched = 0;
+      for (const id of sorted) {
+        const c = preview ? makeBack() : makeCard(id, 'button');
+        if (!preview) {
+          if (id === opt.incoming) c.classList.add('incoming');
+          if (opt.hiddenCards && opt.hiddenCards.includes(id)) c.classList.add('incoming');
+          if (canPick && selected === id) c.classList.add('sel');
+          if (claimM && M(id) === claimM && matched < 2) { c.classList.add('match'); matched++; }
+          c.tabIndex = canPick ? 0 : -1;
+          c.addEventListener('click', () => onCardClick(id));
+        }
+        hand.appendChild(c);
+      }
+    }
+    if (canPick && selected != null && !me.hand.includes(selected)) selected = null;
+    renderActions();
+  }
+
+  function btn(label, cls, onClick, sub) {
+    const b = el('button', 'btn ' + (cls || ''));
+    b.type = 'button';
+    b.innerHTML = label + (sub ? ` <small>${sub}</small>` : '');
+    b.addEventListener('click', onClick);
+    return b;
+  }
+
+  function renderActions() {
+    const box = $('#actions');
+    box.innerHTML = '';
+    if (!G || preview || dealing) return;
+    const me = G.players[HUMAN];
+    if (G.phase === 'roundEnd') { box.appendChild(btn('점수표 보기', '', () => showRoundSheet())); return; }
+    if (G.phase === 'gameEnd') { box.appendChild(btn('최종 결과', 'gold', () => showGameEnd())); return; }
+    const actor = NP.actorOf(G);
+    if (actor !== HUMAN) {
+      box.appendChild(el('p', 'hint', `${nameOf(actor)} 차례예요`));
+      return;
+    }
+    if (G.phase === 'draw') {
+      box.appendChild(btn('한 장 가져오기', 'primary', () => act({ type: 'draw', p: HUMAN })));
+      if (NP.canStop(G, HUMAN)) {
+        box.appendChild(btn('스톱', 'gold', () => act({ type: 'stop', p: HUMAN }), `합 ${NP.handTotal(me.hand, G.rules)}`));
+      }
+    } else if (G.phase === 'discard') {
+      const jk = me.hand.length === 6 ? NP.findJokbo(me.hand, G.rules) : null;
+      if (jk) box.appendChild(btn(`족보! ${jk.name}`, 'gold', () => act({ type: 'declare', p: HUMAN }), `${jk.score > 0 ? '+' : ''}${jk.score}점`));
+      if (selected != null && me.hand.includes(selected)) {
+        box.appendChild(btn(`${M(selected)}월 버리기`, 'primary', () => act({ type: 'discard', p: HUMAN, card: selected })));
+      } else {
+        box.appendChild(el('p', 'hint', me.hand.length === 3 && me.drawsSinceMeld === 0 ? '뽕 했어요. 남은 3장 중 버릴 패를 고르세요' : '버릴 패를 골라 주세요 · 두 번 누르면 바로 버려요'));
+      }
+    } else if (G.phase === 'claim' && G.claim && G.claim.p === HUMAN) {
+      const k = G.claim.kind;
+      const label = k === 'bak' ? '박!' : k === 'jayeon' ? '자연바가지!' : '뽕!';
+      const sub = k === 'ppong' ? `${M(G.claim.card)}월 2장 내려놓기` : '패를 다 털고 0점';
+      box.appendChild(btn(label, 'primary shout', () => act({ type: 'claim', p: HUMAN }), ''));
+      box.appendChild(btn('넘기기', '', () => act({ type: 'pass', p: HUMAN })));
+      box.insertAdjacentHTML('beforeend', `<p class="hint" style="flex-basis:100%">${sub}</p>`);
+    }
+  }
+
+  function say(html) {
+    lastLine = html;
+    $('#msg').innerHTML = html;
+  }
+
+  /* ───────── 움직임 ───────── */
+  function rectOf(node) { return node ? node.getBoundingClientRect() : null; }
+  function seatHandRect(i) {
+    const seat = document.querySelector(`.seat[data-p="${i}"]`);
+    if (!seat) return null;
+    const minis = seat.querySelectorAll('.mini');
+    const last = minis[minis.length - 1];
+    if (last) return rectOf(last);
+    const r = rectOf(seat.querySelector('.minis'));
+    return r ? new DOMRect(r.left, r.top, 14, 22) : rectOf(seat);
+  }
+  function anchorRect(i) {
+    if (i === HUMAN) return rectOf($('#hand'));
+    return rectOf(document.querySelector(`.seat[data-p="${i}"]`));
+  }
+  function fly(card, from, to, o = {}) {
+    if (!from || !to || T(100) === 0) return Promise.resolve();
+    const g = card == null ? makeBack('ghost') : makeCard(card, 'div', 'ghost');
+    g.style.setProperty('--w', to.width + 'px');
+    g.style.left = to.left + 'px';
+    g.style.top = to.top + 'px';
+    $('#fx').appendChild(g);
+    const sx = from.width / to.width, sy = from.height / to.height;
+    const dx = from.left - to.left, dy = from.top - to.top;
+    const a = g.animate([
+      { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy}) rotate(${o.spin || 0}deg)` },
+      { transform: 'translate(0, 0) scale(1, 1) rotate(0deg)' },
+    ], { duration: o.dur != null ? o.dur : T(320), delay: o.delay || 0, easing: 'cubic-bezier(.2,.75,.25,1)', fill: 'both' });
+    return a.finished.then(() => g.remove(), () => g.remove());
+  }
+  function stamp(text, rect, sub) {
+    if (!rect) return;
+    const s = el('div', 'stamp', text + (sub ? `<small>${sub}</small>` : ''));
+    s.style.left = rect.left + rect.width / 2 + 'px';
+    s.style.top = rect.top + rect.height / 2 + 'px';
+    $('#fx').appendChild(s);
+    setTimeout(() => s.classList.add('out'), Math.max(900, T(1300)));
+    setTimeout(() => s.remove(), Math.max(1300, T(1700)));
+  }
+  function shake() {
+    if (reduceMotion) return;
+    $('#felt').animate([{ transform: 'translate(0,0)' }, { transform: 'translate(-4px,1px)' }, { transform: 'translate(4px,-1px)' }, { transform: 'translate(-2px,0)' }, { transform: 'translate(0,0)' }], { duration: 260 });
+  }
+
+  /* ───────── 진행 ───────── */
+  function snapshotFrom(a) {
+    const out = {};
+    if (a.type === 'draw') out.deck = rectOf($('#deck .card:last-child')) || rectOf($('#deck'));
+    if (a.type === 'discard') {
+      out.src = a.p === HUMAN ? rectOf(document.querySelector(`#hand .card[data-id="${a.card}"]`)) : seatHandRect(a.p);
+    }
+    if (a.type === 'claim') {
+      const m = M(G.claim.card);
+      const used = G.players[a.p].hand.filter((x) => M(x) === m).slice(0, 2);
+      out.srcs = used.map((id) => (a.p === HUMAN ? rectOf(document.querySelector(`#hand .card[data-id="${id}"]`)) : seatHandRect(a.p)));
+    }
+    return out;
+  }
+
+  async function act(a) {
+    if (busy || !G || preview) return;
+    if (a.p === HUMAN) Sound.unlock();
+    const g0 = gen;
+    busy = true;
+    clearTimers();
+    let ev = [];
+    try {
+      const from = snapshotFrom(a);
+      ev = NP.apply(G, a);
+      if (a.type === 'discard' || a.type === 'claim' || a.type === 'pass') selected = null;
+      saveStore();
+      await present(a, ev, from);
+    } catch (err) {
+      console.error(err);
+      if (gen === g0) say('그 행동은 지금 할 수 없어요');
+    }
+    if (gen !== g0) return; // 그사이 새 게임이 시작됨
+    busy = false;
+    render();
+    saveStore();
+    tick();
+  }
+  const resume = () => { if (G && !preview && !busy) { render(); tick(); } };
+
+  async function present(a, ev, from) {
+    const p = a.p;
+    switch (a.type) {
+      case 'draw': {
+        const card = ev[0].card;
+        if (p === HUMAN) {
+          render({ incoming: card });
+          const to = rectOf(document.querySelector(`#hand .card[data-id="${card}"]`));
+          Sound.swish();
+          await fly(card, from.deck, to, { spin: -6 });
+          say(`${monthObj(card)} 가져왔어요. 버릴 패를 고르세요`);
+        } else {
+          render({ seatIncoming: p });
+          Sound.swish();
+          // 상대 자리의 맨 끝 자리로
+          const seat = document.querySelector(`.seat[data-p="${p}"] .minis`);
+          const lastMini = seat && seat.lastElementChild;
+          const r = lastMini ? rectOf(lastMini) : seatHandRect(p);
+          const to = r ? new DOMRect(r.left + (lastMini ? 8 : 0), r.top, 14, 22) : null;
+          await fly(null, from.deck, to);
+          say(`${nameOf(p)} 차례 — 한 장 가져갔어요`);
+        }
+        break;
+      }
+      case 'discard': {
+        render({ pileHidden: [a.card] });
+        const top = rectOf($('#pile .card.top'));
+        await fly(a.card, from.src, top, { spin: 8 });
+        $('#pile .card.top') && $('#pile .card.top').classList.remove('incoming');
+        Sound.tak();
+        const who = p === HUMAN ? `${monthObj(a.card)} 버렸어요` : `${subj(p)} <em>${monthObj(a.card)}</em> 버렸어요`;
+        const chance = ev.find((e) => e.t === 'claimChance');
+        if (chance && chance.p === HUMAN) {
+          say(`${who} — <em>${chance.kind === 'ppong' ? '뽕' : chance.kind === 'bak' ? '박' : '자연바가지'}</em> 할 수 있어요!`);
+          Sound.ping();
+        } else if (ev.some((e) => e.t === 'exhaust')) {
+          say(`${who} 더미가 다 떨어졌어요`);
+        } else {
+          say(who);
+        }
+        break;
+      }
+      case 'claim': {
+        const e = ev.find((x) => x.t === 'claim');
+        const label = e.kind === 'bak' ? '박!' : e.kind === 'jayeon' ? '자연바가지!' : '뽕!';
+        stamp(label, anchorRect(p), p === HUMAN ? '' : nameOf(p));
+        Sound.slam();
+        shake();
+        render({ pileHidden: e.used, hiddenCards: [] });
+        const cards = $('#pile').querySelectorAll('.card');
+        const targets = Array.from(cards).slice(-2).map(rectOf);
+        await Promise.all(e.used.map((id, k) => fly(id, from.srcs[k], targets[k], { delay: k * T(70), spin: k ? 10 : -10 })));
+        render();
+        if (e.kind === 'ppong') {
+          say(p === HUMAN ? `<em>뽕!</em> ${M(e.card)}월 세 장을 내려놨어요. 한 장 버리세요` : `${nameOf(p)} <em>뽕!</em> ${M(e.card)}월 세 장`);
+        } else {
+          say(`${nameOf(p)} <em>${label}</em> 패를 다 털었어요`);
+        }
+        await wait(T(450));
+        break;
+      }
+      case 'pass':
+        render();
+        say('넘겼어요');
+        break;
+      case 'stop': {
+        stamp('스톱!', anchorRect(p), p === HUMAN ? '' : nameOf(p));
+        Sound.slam();
+        shake();
+        say(`${p === HUMAN ? '' : nameOf(p) + ' '}<em>스톱!</em> 모두 패를 공개해요`);
+        render();
+        await wait(Math.max(700, T(900)));
+        break;
+      }
+      case 'declare': {
+        const e = ev.find((x) => x.t === 'declare');
+        stamp('족보!', anchorRect(p), e.jokbo.name);
+        Sound.slam();
+        say(`${p === HUMAN ? '' : nameOf(p) + ' '}<em>족보 — ${e.jokbo.name}</em>`);
+        render();
+        await wait(Math.max(800, T(1000)));
+        break;
+      }
+      case 'next': {
+        await dealAnimation();
+        break;
+      }
+    }
+  }
+
+  async function dealAnimation() {
+    const n = G.players.length, d = G.dealer;
+    dealing = true;
+    try { await dealFly(n, d); } finally { dealing = false; }
+    render();
+    say(G.dealer === HUMAN ? '내가 선이에요. 6장 중 한 장을 버리며 시작해요' : `${subj(G.dealer)} 선이에요`);
+  }
+  async function dealFly(n, d) {
+    const g0 = gen;
+    render({ hideHands: true, hidePile: true });
+    say(`${G.round}판 — ${G.dealer === HUMAN ? '내가' : subj(G.dealer)} 선이에요`);
+    if (T(100) > 0) {
+      const deckR = rectOf($('#deck .card:last-child')) || rectOf($('#deck'));
+      const handR = rectOf($('#hand'));
+      const hw = parseFloat(getComputedStyle($('#hand')).getPropertyValue('--hand-w')) || 52;
+      const target = (i) => {
+        if (i === HUMAN) return new DOMRect(handR.left + handR.width / 2 - hw / 2, handR.top + 14, hw, hw * 1.6);
+        const r = rectOf(document.querySelector(`.seat[data-p="${i}"] .minis`));
+        return r ? new DOMRect(r.left + 10, r.top, 14, 22) : null;
+      };
+      const seq = [];
+      const order = [];
+      for (let k = 0; k < n; k++) order.push((d + k) % n);
+      order.forEach((i) => { for (let c = 0; c < 3; c++) seq.push(i); });
+      order.forEach((i) => { for (let c = 0; c < (i === d ? 3 : 2); c++) seq.push(i); });
+      const gap = T(48);
+      seq.forEach((_, k) => setTimeout(() => Sound.tick(), k * gap));
+      await Promise.all(seq.map((i, k) => fly(null, deckR, target(i), { delay: k * gap, dur: T(260) })));
+      if (gen !== g0) return;
+      render({ hidePile: true });
+      const pileR = rectOf($('#pile'));
+      await fly(G.pile[0].card, deckR, pileR, { dur: T(300), spin: 12 });
+      Sound.tak();
+    }
+  }
+
+  const resultKey = () => `${gen}:${G.history.length}`;
+  function tick() {
+    clearTimers();
+    if (!G || preview || busy) return;
+    if (!$('#backdrop').hidden) return; // 시트를 보는 동안은 컴퓨터도 기다림
+    if (G.phase === 'roundEnd') { if (shownFor !== resultKey()) later(showRoundSheet, Math.max(500, T(700))); return; }
+    if (G.phase === 'gameEnd') { if (shownFor !== 'end:' + gen) showGameEnd(); return; }
+    const actor = NP.actorOf(G);
+    if (actor < 0) return;
+    if (G.players[actor].kind === 'human') {
+      if (G.phase === 'draw') say(NP.canStop(G, HUMAN) ? `내 차례 — 한 장 가져오거나 <em>스톱</em>할 수 있어요` : '내 차례 — 더미에서 한 장 가져오세요');
+      return;
+    }
+    const view = NP.viewFor(G, actor);
+    const a = NPAI.decide(view, G.players[actor].persona, Math.random);
+    if (!a) return;
+    const delay = G.phase === 'claim' ? T(380) : a.type === 'discard' ? T(520) : T(480);
+    later(() => act(a), delay);
+  }
+
+  function onCardClick(id) {
+    if (busy || !G || G.phase !== 'discard' || G.turn !== HUMAN) return;
+    Sound.unlock();
+    if (selected === id) { act({ type: 'discard', p: HUMAN, card: id }); return; }
+    selected = id;
+    render();
+    const b = $('#actions .btn.primary');
+    if (b) b.focus({ preventScroll: true });
+  }
+
+  /* ───────── 시트(종이) ───────── */
+  function openSheet(html, opts = {}) {
+    clearTimers();
+    const bd = $('#backdrop'), sh = $('#sheet');
+    sh.innerHTML = html;
+    bd.hidden = false;
+    bd.onclick = (e) => { if (e.target === bd && opts.dismiss !== false) { closeSheet(); resume(); } };
+    const focusable = sh.querySelector('[data-autofocus]') || sh.querySelector('button, input');
+    if (focusable) setTimeout(() => focusable.focus({ preventScroll: true }), 30);
+    return sh;
+  }
+  function closeSheet() { $('#backdrop').hidden = true; $('#sheet').innerHTML = ''; }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !$('#backdrop').hidden && $('#sheet').dataset.dismiss !== 'no') { closeSheet(); resume(); }
+  });
+
+  function rulesHTML(r) {
+    r = r || (G ? G.rules : S.rules);
+    return `<div class="rules">
+      <div class="sheet-head"><span class="seal-mark" aria-hidden="true">規</span><div><h2 id="sheetTitle">나일롱뽕 규칙</h2><p class="lede">손에 남은 패 숫자의 합이 작을수록 이기는 화투 놀이</p></div></div>
+      <h3>목표</h3><p>1월 패는 1점, 12월 패는 12점. 판이 끝날 때 손에 든 패의 합만큼 점수를 받아요. 정한 판 수를 다 하고 누적 점수가 가장 낮은 사람이 1등이에요.</p>
+      <h3>시작</h3><p>선은 6장, 나머지는 5장을 받아요. 남은 패는 더미로 쌓고 맨 윗장을 뒤집어 버림패 자리에 둡니다(이 패로는 뽕할 수 없어요). 선은 첫 차례에 한 장 버리기만 해요.</p>
+      <h3>차례</h3><p>더미에서 한 장 가져오고 한 장 버려요. 차례는 반시계 방향이라 내 오른쪽 사람이 다음이에요.</p>
+      <h3>뽕</h3><p>누가 버린 패와 같은 월을 2장 갖고 있으면 차례와 상관없이 뽕을 칠 수 있어요. 2장을 버림패 위에 내려놓고 남은 3장 중 1장을 버려요. 그러면 손에 2장만 남고, 다음 차례는 뽕한 사람의 오른쪽 사람이에요.</p>
+      <h3>박</h3><p>뽕하고 남은 2장이 같은 월인데 그 월이 또 버려지면 한 번 더 뽕, 이게 박이에요. 패를 다 털고 0점으로 이기고, 그 패를 버린 사람은 바가지를 써서 손패 합에 ${r.bagaji}점을 더 받아요.</p>
+      <h3>자연뽕 · 자연바가지</h3><p>손에 같은 월 3장을 쥔 것이 자연뽕이에요. 자연뽕에 나머지 2장이 같은 월일 때 그 월이 버려져 뽕하면 패를 다 턴 것으로 쳐서 0점으로 이기고, 버린 사람은 바가지예요. ${r.naturalFree ? '이 판에서는 하우스 룰로 자연뽕 3장을 점수에서 빼 줘요.' : '스톱이나 더미가 떨어졌을 때 자연뽕은 점수에서 빼 주지 않아요.'}</p>
+      <h3>스톱</h3><p>손패 합이 ${r.stopLimit} 이하면 내 차례에 패를 가져오는 대신 스톱을 외칠 수 있어요. 모두 패를 공개해서 내가 가장 낮으면 0점, 아니면(같은 점수가 있어도) 손패 합에 ${r.stopPenalty}점을 더 받아요.</p>
+      <h3>족보</h3><p>6장을 쥐었을 때(선의 첫 패, 또는 한 장 가져온 직후) 아래 조합이면 바로 공개해서 판을 끝낼 수 있어요. 나머지 사람은 손패 합만큼 받아요.</p>
+      <table><thead><tr><th>족보</th><th>조건</th><th>점수</th></tr></thead><tbody>
+        <tr><td>또이또이</td><td>같은 숫자 3장씩 두 묶음, 또는 2장씩 세 묶음</td><td>0</td></tr>
+        <tr><td>스트레이트</td><td>6장이 모두 이어진 숫자 (1–6부터 7–12까지)</td><td>−합<br>(−21~−57)</td></tr>
+        <tr><td>10 부족</td><td>합 10 이하</td><td>−100</td></tr>
+        <tr><td>60 이상</td><td>합 60 이상</td><td>−100</td></tr>
+        <tr><td>총통</td><td>${r.chongtongStrict ? '같은 숫자 4장 + 나머지 2장도 같은 숫자 (4-2)' : '같은 숫자 4장'}</td><td>−100</td></tr>
+      </tbody></table>
+      <h3>더미가 떨어지면</h3><p>모두 손패 합만큼 점수를 받아요.</p>
+      <h3>다음 판</h3><p>이번 판 점수가 가장 낮은 사람이 선을 잡아요.</p>
+      <p class="src">규칙은 <a href="https://namu.wiki/w/%EB%82%98%EC%9D%B4%EB%A1%B1%EB%BD%95" target="_blank" rel="noopener">나무위키 ‘나이롱뽕’</a> 문서를 따랐어요. 지역마다 다른 규칙은 새 게임의 ‘지역 규칙’에서 바꿀 수 있어요.</p>
+      <div class="sheet-actions"><button class="btn primary" type="button" data-close data-autofocus>닫기</button></div>
+    </div>`;
+  }
+  function showRules() {
+    const sh = openSheet(rulesHTML());
+    sh.dataset.dismiss = 'yes';
+    sh.querySelector('[data-close]').onclick = () => { closeSheet(); resume(); };
+  }
+
+  function seg(name, options, value) {
+    return `<div class="seg" role="radiogroup">${options.map(([v, label]) => `<label><input type="radio" name="${name}" id="${name}-${v}" value="${v}"${String(v) === String(value) ? ' checked' : ''}><span>${label}</span></label>`).join('')}</div>`;
+  }
+  function showStart() {
+    const hasGame = G && !preview && G.phase !== 'gameEnd';
+    const r = S.rules;
+    const sh = openSheet(`
+      <div class="sheet-head"><span class="seal-mark" aria-hidden="true">뽕</span><div><h2 id="sheetTitle">나일롱뽕</h2><p class="lede">화투로 하는 러미 놀이. 손에 남은 패 숫자의 합이 가장 낮은 사람이 이겨요.</p></div></div>
+      <div class="field"><span class="field-label">함께할 컴퓨터</span>${seg('cpu', [[1, '1명'], [2, '2명'], [3, '3명']], S.cpu)}</div>
+      <div class="field"><span class="field-label">판 수</span>${seg('rounds', [[3, '3판'], [5, '5판'], [10, '10판']], S.rounds)}</div>
+      <div class="field"><span class="field-label">진행 속도</span>${seg('speed', [['normal', '보통'], ['fast', '빠르게']], S.speed)}</div>
+      <details class="house">
+        <summary>지역 규칙</summary>
+        <p class="note">기본값은 나무위키에 적힌 규칙이에요. 동네마다 다른 규칙으로 바꿀 수 있어요.</p>
+        <div class="field"><span class="field-label">스톱할 수 있는 손패 합</span>${seg('stopLimit', [[5, '5 이하'], [10, '10 이하']], r.stopLimit)}</div>
+        <div class="field"><span class="field-label">스톱 실패 벌점</span>${seg('stopPenalty', [[30, '+30'], [50, '+50']], r.stopPenalty)}</div>
+        <div class="field"><span class="field-label">바가지 점수</span>${seg('bagaji', [[20, '+20'], [30, '+30']], r.bagaji)}</div>
+        <div class="field"><span class="field-label">총통 인정</span>${seg('chong', [['any', '4장이면 인정'], ['strict', '4-2만 인정']], r.chongtongStrict ? 'strict' : 'any')}</div>
+        <div class="field"><span class="field-label">자연뽕 점수</span>${seg('natural', [['count', '그대로 셈'], ['free', '빼 줌']], r.naturalFree ? 'free' : 'count')}</div>
+      </details>
+      <div class="sheet-actions">
+        ${hasGame ? '<button class="btn" type="button" data-resume>이어서 하기</button>' : ''}
+        <button class="btn primary" type="button" data-start data-autofocus>${hasGame ? '새로 시작' : '시작하기'}</button>
+      </div>
+      <div class="sheet-actions" style="margin-top:8px"><button class="btn" type="button" data-rules>규칙 보기</button></div>
+    `, { dismiss: hasGame });
+    sh.dataset.dismiss = hasGame ? 'yes' : 'no';
+    const val = (name) => { const i = sh.querySelector(`input[name="${name}"]:checked`); return i ? i.value : null; };
+    sh.querySelector('[data-start]').onclick = () => {
+      S = cleanSettings({
+        cpu: +val('cpu'), rounds: +val('rounds'), speed: val('speed'),
+        rules: { stopLimit: +val('stopLimit'), stopPenalty: +val('stopPenalty'), bagaji: +val('bagaji'), chongtongStrict: val('chong') === 'strict', naturalFree: val('natural') === 'free' },
+      });
+      Sound.unlock();
+      closeSheet();
+      newGame();
+    };
+    const res = sh.querySelector('[data-resume]');
+    if (res) res.onclick = () => { Sound.unlock(); closeSheet(); resume(); };
+    sh.querySelector('[data-rules]').onclick = () => {
+      const back = () => showStart();
+      const s2 = openSheet(rulesHTML(S.rules));
+      s2.querySelector('[data-close]').textContent = '돌아가기';
+      s2.querySelector('[data-close]').onclick = back;
+    };
+  }
+
+  function tallyHTML(res) {
+    const order = [];
+    for (let k = 0; k < G.players.length; k++) order.push(k);
+    order.sort((a, b) => res.scores[a] - res.scores[b] || a - b);
+    return `<ol class="tally">${order.map((i) => {
+      const pl = G.players[i];
+      const hand = res.hands[i].slice().sort((a, b) => a - b);
+      const notes = res.notes[i].map((t) => `<span class="note">${t}</span>`).join(' ');
+      const melds = res.melds[i].map((m) => `<span class="meld-tag">뽕 ${M(m[0])}월</span>`).join('');
+      const sc = res.scores[i];
+      return `<li class="${i === res.best ? 'win' : ''}">
+        <div class="who">${avatarHTML(i)}<span class="name">${pl.name}</span>${notes}</div>
+        <div class="cards" data-cards="${hand.join(',')}">${melds}${hand.length ? '' : '<span class="empty-hand">패를 다 털었어요</span>'}</div>
+        <div class="num round"><small>이번 판</small>${sc > 0 ? '+' + sc : sc}</div>
+        <div class="num total"><small>누적</small>${res.cumulative[i]}</div>
+        <div class="sum">손패 합 ${res.totals[i]}</div>
+      </li>`;
+    }).join('')}</ol>`;
+  }
+  function fillTallyCards(sh) {
+    sh.querySelectorAll('.cards[data-cards]').forEach((box) => {
+      const ids = box.dataset.cards ? box.dataset.cards.split(',').map(Number) : [];
+      ids.forEach((id) => box.appendChild(makeCard(id)));
+    });
+  }
+  function headline(res) {
+    const n = (i) => (i === HUMAN ? '내' : G.players[i].name);
+    switch (res.kind) {
+      case 'bak': return [res.p === HUMAN ? '박! 패를 다 털었어요' : `${n(res.p)} 박!`,`${res.from === HUMAN ? '내가' : subj(res.from)} 버린 패로 패를 다 털었어요. ${res.from === HUMAN ? '내가' : subj(res.from)} 바가지를 썼어요.`, '박'];
+      case 'jayeon': return [`${n(res.p)} 자연바가지!`, `자연뽕을 쥐고 남은 짝으로 뽕해서 바로 이겼어요. ${res.from === HUMAN ? '내가' : subj(res.from)} 바가지를 썼어요.`, '뽕'];
+      case 'stop': return res.success
+        ? [`${n(res.p)} 스톱 성공`, `손패 합 ${res.totals[res.p]}로 가장 낮아서 0점이에요.`, '止']
+        : [`${n(res.p)} 스톱 실패`, `더 낮거나 같은 사람이 있어서 손패 합에 ${G.rules.stopPenalty}점을 더 받아요.`, '止'];
+      case 'jokbo': return [`${n(res.p)} 족보 — ${res.jokbo.name}`, `${res.jokbo.all.join(' · ')} → ${res.jokbo.score}점`, '譜'];
+      default: return ['더미가 다 떨어졌어요', '모두 손패 합만큼 점수를 받아요.', '終'];
+    }
+  }
+  function showRoundSheet() {
+    if (!G || !G.result || G.phase !== 'roundEnd') return;
+    shownFor = resultKey();
+    const res = G.result;
+    const [title, desc, mark] = headline(res);
+    const iWon = res.best === HUMAN;
+    if (iWon) Sound.win(); else if (res.from === HUMAN || (res.kind === 'stop' && res.p === HUMAN && !res.success)) Sound.lose();
+    const sh = openSheet(`
+      <div class="sheet-head"><span class="seal-mark" aria-hidden="true">${mark}</span><div><h2 id="sheetTitle">${title}</h2><p class="lede">${G.round}판 · ${desc}</p></div></div>
+      ${tallyHTML(res)}
+      <div class="sheet-actions">
+        <button class="btn" type="button" data-scores>점수표</button>
+        <button class="btn primary" type="button" data-next data-autofocus>${res.last ? '최종 결과 보기' : `다음 판 (${G.round + 1}/${G.rounds})`}</button>
+      </div>`, { dismiss: true });
+    sh.dataset.dismiss = 'yes';
+    fillTallyCards(sh);
+    sh.querySelector('[data-next]').onclick = () => { closeSheet(); act({ type: 'next', p: HUMAN }); };
+    sh.querySelector('[data-scores]').onclick = () => showScores(true);
+  }
+  function scoreTableHTML() {
+    const P = G.players;
+    const kindTag = { bak: '박', jayeon: '자연', stop: '스톱', jokbo: '족보', exhaust: '' };
+    const rows = G.history.map((h) => `<tr><td>${h.round}판 <span class="tag" style="color:var(--seal)">${kindTag[h.kind] || ''}</span></td>${h.scores.map((s) => `<td>${s}</td>`).join('')}</tr>`).join('');
+    return `<div class="scoretable-wrap"><table class="scores"><thead><tr><th>판</th>${P.map((p) => `<th>${p.name}</th>`).join('')}</tr></thead>
+      <tbody>${rows || `<tr><td colspan="${P.length + 1}" style="text-align:center;color:#6a6250">아직 끝난 판이 없어요</td></tr>`}</tbody>
+      <tfoot><tr><td>합계</td>${P.map((p) => `<td>${p.score}</td>`).join('')}</tr></tfoot></table></div>`;
+  }
+  function showScores(fromRound) {
+    if (!G) return;
+    const sh = openSheet(`
+      <div class="sheet-head"><span class="seal-mark" aria-hidden="true">點</span><div><h2 id="sheetTitle">점수표</h2><p class="lede">${G.rounds}판 중 ${G.history.length}판 끝 · 낮을수록 좋아요</p></div></div>
+      ${scoreTableHTML()}
+      <div class="sheet-actions"><button class="btn primary" type="button" data-close data-autofocus>${fromRound ? '돌아가기' : '닫기'}</button></div>`);
+    sh.dataset.dismiss = 'yes';
+    sh.querySelector('[data-close]').onclick = () => { if (fromRound) showRoundSheet(); else { closeSheet(); resume(); } };
+  }
+  function showGameEnd() {
+    if (!G) return;
+    clearTimers();
+    shownFor = 'end:' + gen;
+    const st = NP.standings(G);
+    const mine = st.find((r) => r.i === HUMAN);
+    const title = mine.rank === 1 ? (st.filter((r) => r.rank === 1).length > 1 ? '공동 1등!' : '1등!') : `${mine.rank}등`;
+    if (mine.rank === 1) Sound.win(); else Sound.lose();
+    const sh = openSheet(`
+      <div class="sheet-head"><span class="seal-mark" aria-hidden="true">${mine.rank === 1 ? '壹' : '終'}</span><div><h2 id="sheetTitle">${title}</h2><p class="lede">${G.rounds}판을 모두 마쳤어요. 누적 점수가 가장 낮은 사람이 이겨요.</p></div></div>
+      <ol class="rank-list">${st.map((r) => `<li class="${r.rank === 1 ? 'first' : ''}"><span class="rk">${r.rank}위</span>${avatarHTML(r.i)}<b>${r.name}</b><span class="pts">${r.score}점</span></li>`).join('')}</ol>
+      ${scoreTableHTML()}
+      <div class="sheet-actions">
+        <button class="btn" type="button" data-settings>설정 바꾸기</button>
+        <button class="btn primary" type="button" data-again data-autofocus>한 번 더</button>
+      </div>`, { dismiss: false });
+    sh.dataset.dismiss = 'no';
+    sh.querySelector('[data-again]').onclick = () => { closeSheet(); newGame(); };
+    sh.querySelector('[data-settings]').onclick = () => showStart();
+  }
+
+  /* ───────── 시작 ───────── */
+  function randomSeed() {
+    try { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] || 1; } catch (e) { return (Math.random() * 4294967295) >>> 0 || 1; }
+  }
+  function makeGame(seed) {
+    const players = [{ name: ME.name, kind: 'human' }];
+    for (let k = 0; k < S.cpu; k++) players.push({ name: CPU[k].name, kind: 'ai', persona: CPU[k].persona });
+    return NP.createGame({ players, rounds: S.rounds, rules: S.rules, seed, firstDealer: HUMAN });
+  }
+  async function newGame() {
+    clearTimers();
+    gen += 1;
+    const g0 = gen;
+    busy = true;
+    preview = false;
+    selected = null;
+    shownFor = null;
+    G = makeGame(randomSeed());
+    saveStore();
+    try { await dealAnimation(); } finally { if (gen === g0) busy = false; }
+    if (gen !== g0) return;
+    render();
+    saveStore();
+    tick();
+  }
+  function showPreview() {
+    preview = true;
+    G = makeGame(20261013);
+    render();
+    say('');
+  }
+
+  $('#btnRules').onclick = showRules;
+  $('#btnScores').onclick = () => (G && !preview ? showScores(false) : showRules());
+  $('#btnMenu').onclick = () => showStart();
+  $('#btnSound').onclick = () => {
+    Sound.on = !Sound.on;
+    $('#btnSound').setAttribute('aria-pressed', String(Sound.on));
+    if (Sound.on) { Sound.unlock(); Sound.tak(); }
+    saveStore();
+  };
+  $('#deck').onclick = () => { if (G && !preview && G.phase === 'draw' && G.turn === HUMAN) act({ type: 'draw', p: HUMAN }); };
+
+  function boot(data) {
+    buildSprite();
+    const store = loadStore();
+    S = cleanSettings((data && data.S) || store.settings);
+    if (typeof store.sound === 'boolean') Sound.on = store.sound;
+    if (data && typeof data.sound === 'boolean') Sound.on = data.sound;
+    $('#btnSound').setAttribute('aria-pressed', String(Sound.on));
+    const saved = (data && validGame(data.G) && data.G) || (validGame(store.game) && store.game);
+    if (saved && saved.phase !== 'gameEnd') {
+      G = saved;
+      preview = false;
+      render();
+      say(lastLine || '이어서 할 수 있어요');
+      if (data && data.G) { tick(); return; }
+      showStart();
+      return;
+    }
+    showPreview();
+    showStart();
+  }
+
+  if (window.claude && window.claude.hot && window.claude.hot.snapshot) {
+    try { window.claude.hot.snapshot(() => ({ G: preview ? null : G, S, sound: Sound.on })); } catch (e) { /* 미리보기 밖 */ }
+  }
+  // 자동 테스트용 손잡이
+  window.__nylon = { get G() { return G; }, act, get busy() { return busy; }, newGame, setSpeed(v) { S.speed = v; } };
+
+  const hot = window.claude && window.claude.hot;
+  if (hot && hot.ready) hot.ready(boot); else boot((hot && hot.data) || {});
+})();
+</script>
+</body>
+</html>
