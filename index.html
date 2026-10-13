@@ -1087,7 +1087,7 @@ table.scores td.tag { color: var(--seal); }
   const HUMAN = 0;
   const STORE_KEY = 'nylonppong.v1';
   // 온라인 서버 주소 (build.js가 채움. 비어 있으면 사람들과 하기를 숨김)
-  const SERVER = (() => { const s = ''; return /^https?:\/\//.test(s) ? s.replace(/\/$/, '') : ''; })();
+  const SERVER = (() => { const s = 'https://nylon-ppong.2juwon.workers.dev'; return /^https?:\/\//.test(s) ? s.replace(/\/$/, '') : ''; })();
   const $ = (s, el = document) => el.querySelector(s);
   const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
   const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
