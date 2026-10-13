@@ -557,6 +557,16 @@ table.scores td.tag { color: var(--seal); }
     return { key: found[0].key, name: found[0].name, score: found[0].score, sum, all: found.map((f) => f.name) };
   }
 
+  // 지금 손패로 바로 끝낼 수 있는지: 6장 족보, 또는 뽕한 뒤 남은 3장이 모두 같은 월(자연뽕 → 패를 다 턴 것)
+  function findWin(hand, rules) {
+    if (!hand) return null;
+    if (hand.length === 6) return findJokbo(hand, rules);
+    if (hand.length === 3 && hand.every((c) => monthOf(c) === monthOf(hand[0]))) {
+      return { key: 'natural3', name: '자연뽕', score: 0, sum: sumMonths(hand), all: ['자연뽕 — 패를 다 털었어요'] };
+    }
+    return null;
+  }
+
   // 버림패 card에 대해 이 손패로 할 수 있는 것: null | 'ppong' | 'bak' | 'jayeon'
   function claimKind(hand, card) {
     const m = monthOf(card);
@@ -653,7 +663,7 @@ table.scores td.tag { color: var(--seal); }
         break;
       case 'discard':
         if (state.turn === p) {
-          if (pl.hand.length === 6 && findJokbo(pl.hand, state.rules)) out.push({ type: 'declare', p });
+          if (findWin(pl.hand, state.rules)) out.push({ type: 'declare', p });
           for (const c of pl.hand) out.push({ type: 'discard', p, card: c });
         }
         break;
@@ -756,8 +766,8 @@ table.scores td.tag { color: var(--seal); }
         break;
       }
       case 'declare': {
-        if (state.phase !== 'discard' || state.turn !== p || pl.hand.length !== 6) fail('지금은 족보를 낼 수 없어요');
-        const jk = findJokbo(pl.hand, state.rules);
+        if (state.phase !== 'discard' || state.turn !== p) fail('지금은 족보를 낼 수 없어요');
+        const jk = findWin(pl.hand, state.rules);
         if (!jk) fail('족보가 아니에요');
         ev.push({ t: 'declare', p, jokbo: jk });
         endRound(state, { kind: 'jokbo', p, jokbo: jk }, ev);
@@ -863,7 +873,7 @@ table.scores td.tag { color: var(--seal); }
   }
 
   return {
-    MONTH_NAMES, DEFAULT_RULES, monthOf, mulberry32, handTotal, sumMonths, findJokbo, claimKind,
+    MONTH_NAMES, DEFAULT_RULES, monthOf, mulberry32, handTotal, sumMonths, findJokbo, findWin, claimKind,
     createGame, legalActions, apply, actorOf, canStop, viewFor, standings,
   };
 });
@@ -1069,7 +1079,7 @@ table.scores td.tag { color: var(--seal); }
         return { type: 'draw', p };
       case 'discard':
         if (view.turn !== p) return null;
-        if (me.hand.length === 6 && NP.findJokbo(me.hand, view.rules)) return { type: 'declare', p };
+        if (NP.findWin(me.hand, view.rules)) return { type: 'declare', p };
         return { type: 'discard', p, card: chooseDiscard(view, persona, rng) };
       default:
         return null;
@@ -1601,8 +1611,8 @@ table.scores td.tag { color: var(--seal); }
         box.appendChild(btn('스톱', 'gold', () => act({ type: 'stop', p: HUMAN }), `합 ${NP.handTotal(me.hand, G.rules)}`));
       }
     } else if (G.phase === 'discard') {
-      const jk = me.hand.length === 6 ? NP.findJokbo(me.hand, G.rules) : null;
-      if (jk) box.appendChild(btn(`족보! ${jk.name}`, 'gold', () => act({ type: 'declare', p: HUMAN }), `${jk.score > 0 ? '+' : ''}${jk.score}점`));
+      const jk = NP.findWin(me.hand, G.rules);
+      if (jk) box.appendChild(btn(jk.key === 'natural3' ? '자연뽕! 다 털기' : `족보! ${jk.name}`, 'gold', () => act({ type: 'declare', p: HUMAN }), `${jk.score > 0 ? '+' : ''}${jk.score}점`));
       if (selected != null && me.hand.includes(selected)) {
         box.appendChild(btn(`${M(selected)}월 버리기`, 'primary', () => act({ type: 'discard', p: HUMAN, card: selected })));
       } else {

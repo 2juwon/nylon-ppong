@@ -198,7 +198,7 @@
         return { type: 'draw', p };
       case 'discard':
         if (view.turn !== p) return null;
-        if (me.hand.length === 6 && NP.findJokbo(me.hand, view.rules)) return { type: 'declare', p };
+        if (NP.findWin(me.hand, view.rules)) return { type: 'declare', p };
         return { type: 'discard', p, card: chooseDiscard(view, persona, rng) };
       default:
         return null;

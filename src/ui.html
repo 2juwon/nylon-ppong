@@ -979,8 +979,8 @@ table.scores td.tag { color: var(--seal); }
         box.appendChild(btn('스톱', 'gold', () => act({ type: 'stop', p: HUMAN }), `합 ${NP.handTotal(me.hand, G.rules)}`));
       }
     } else if (G.phase === 'discard') {
-      const jk = me.hand.length === 6 ? NP.findJokbo(me.hand, G.rules) : null;
-      if (jk) box.appendChild(btn(`족보! ${jk.name}`, 'gold', () => act({ type: 'declare', p: HUMAN }), `${jk.score > 0 ? '+' : ''}${jk.score}점`));
+      const jk = NP.findWin(me.hand, G.rules);
+      if (jk) box.appendChild(btn(jk.key === 'natural3' ? '자연뽕! 다 털기' : `족보! ${jk.name}`, 'gold', () => act({ type: 'declare', p: HUMAN }), `${jk.score > 0 ? '+' : ''}${jk.score}점`));
       if (selected != null && me.hand.includes(selected)) {
         box.appendChild(btn(`${M(selected)}월 버리기`, 'primary', () => act({ type: 'discard', p: HUMAN, card: selected })));
       } else {

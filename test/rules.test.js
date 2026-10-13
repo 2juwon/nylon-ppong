@@ -164,6 +164,19 @@ t('족보 선언', () => {
   assert.deepStrictEqual(s.result.scores, [-21, 45]);
 });
 
+t('뽕 뒤 3장이 모두 같은 월이면 0점으로 끝', () => {
+  const s = rig(2, [
+    [C(9, 0), C(9, 1), C(9, 2)],
+    [C(7, 0), C(8, 0), C(10, 0), C(11, 0), C(12, 0)],
+  ], C(12, 1), null, { turn: 0, phase: 'discard', dealer: 0 });
+  s.players[0].melds = [[C(1, 0), C(1, 1), C(1, 2)]];
+  assert.ok(NP.legalActions(s, 0).some((a) => a.type === 'declare'));
+  NP.apply(s, { type: 'declare', p: 0 });
+  assert.strictEqual(s.result.jokbo.key, 'natural3');
+  assert.deepStrictEqual(s.result.scores, [0, 48]);
+});
+t('뽕 뒤 3장이 섞여 있으면 선언 불가', () => assert.strictEqual(NP.findWin([C(9, 0), C(9, 1), C(8, 0)], R0), null));
+
 t('남의 패는 안 보임', () => {
   const s = NP.createGame({ players: [{ name: 'a', kind: 'human' }, { name: 'b' }, { name: 'c' }], seed: 3 });
   const v = NP.viewFor(s, 1);

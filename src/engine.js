@@ -85,6 +85,16 @@
     return { key: found[0].key, name: found[0].name, score: found[0].score, sum, all: found.map((f) => f.name) };
   }
 
+  // 지금 손패로 바로 끝낼 수 있는지: 6장 족보, 또는 뽕한 뒤 남은 3장이 모두 같은 월(자연뽕 → 패를 다 턴 것)
+  function findWin(hand, rules) {
+    if (!hand) return null;
+    if (hand.length === 6) return findJokbo(hand, rules);
+    if (hand.length === 3 && hand.every((c) => monthOf(c) === monthOf(hand[0]))) {
+      return { key: 'natural3', name: '자연뽕', score: 0, sum: sumMonths(hand), all: ['자연뽕 — 패를 다 털었어요'] };
+    }
+    return null;
+  }
+
   // 버림패 card에 대해 이 손패로 할 수 있는 것: null | 'ppong' | 'bak' | 'jayeon'
   function claimKind(hand, card) {
     const m = monthOf(card);
@@ -181,7 +191,7 @@
         break;
       case 'discard':
         if (state.turn === p) {
-          if (pl.hand.length === 6 && findJokbo(pl.hand, state.rules)) out.push({ type: 'declare', p });
+          if (findWin(pl.hand, state.rules)) out.push({ type: 'declare', p });
           for (const c of pl.hand) out.push({ type: 'discard', p, card: c });
         }
         break;
@@ -284,8 +294,8 @@
         break;
       }
       case 'declare': {
-        if (state.phase !== 'discard' || state.turn !== p || pl.hand.length !== 6) fail('지금은 족보를 낼 수 없어요');
-        const jk = findJokbo(pl.hand, state.rules);
+        if (state.phase !== 'discard' || state.turn !== p) fail('지금은 족보를 낼 수 없어요');
+        const jk = findWin(pl.hand, state.rules);
         if (!jk) fail('족보가 아니에요');
         ev.push({ t: 'declare', p, jokbo: jk });
         endRound(state, { kind: 'jokbo', p, jokbo: jk }, ev);
@@ -391,7 +401,7 @@
   }
 
   return {
-    MONTH_NAMES, DEFAULT_RULES, monthOf, mulberry32, handTotal, sumMonths, findJokbo, claimKind,
+    MONTH_NAMES, DEFAULT_RULES, monthOf, mulberry32, handTotal, sumMonths, findJokbo, findWin, claimKind,
     createGame, legalActions, apply, actorOf, canStop, viewFor, standings,
   };
 });
