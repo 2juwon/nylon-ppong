@@ -17,7 +17,7 @@
     stopPenalty: 30,        // 스톱 실패 시 손패 합에 더하는 점수 (지역에 따라 50)
     bagaji: 20,             // 박·자연바가지를 맞은 사람이 더 받는 점수
     chongtongStrict: false, // true면 4-2 형태만 총통으로 인정
-    naturalFree: false,     // 하우스 룰: 손패 속 자연뽕(같은 월 3장)은 점수에서 뺌
+    naturalFree: true,      // 손패 속 자연뽕(같은 월 3장)은 점수에서 뺌 (기본값, 끄면 그대로 셈)
   });
 
   const monthOf = (id) => (id >> 2) + 1; // 카드 id 0~47 → 월 1~12
