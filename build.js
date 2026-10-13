@@ -1,17 +1,28 @@
 /* src/의 엔진·컴퓨터·화면을 합쳐 한 파일로 만든다.
- *   node build.js             → index.html (GitHub Pages용 완성본)
- *   node build.js --artifact  → dist/artifact.html (claude.ai 아티팩트용, 문서 머리 없이)
+ *   node build.js                          → index.html (GitHub Pages용 완성본, config.json의 서버 주소 사용)
+ *   node build.js --server=http://127.0.0.1:8787 --out=dist/local.html  → 로컬 서버로 테스트할 때
+ *   node build.js --artifact               → dist/artifact.html (claude.ai 아티팩트용, 문서 머리 없이·혼자 하기만)
  */
 const fs = require('fs');
 const path = require('path');
 
 const SITE = 'https://2juwon.github.io/nylon-ppong/';
 const TITLE = '나일롱뽕';
-const DESC = '컴퓨터와 겨루는 화투 나일롱뽕 — 뽕! 박! 스톱! 손에 남은 패 합이 가장 낮으면 이겨요';
+const DESC = '화투 나일롱뽕 — 친구·모르는 사람·컴퓨터와 한 판! 뽕! 박! 스톱! 손에 남은 패 합이 가장 낮으면 이겨요';
 
+const arg = (k) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : null; };
 const read = (f) => fs.readFileSync(path.join(__dirname, f), 'utf8');
+const artifact = process.argv.includes('--artifact');
+let server = arg('server');
+if (server == null) {
+  try { server = JSON.parse(read('config.json')).server || ''; } catch (e) { server = ''; }
+}
+if (artifact) server = ''; // 아티팩트 안에서는 다른 서버에 접속할 수 없음
+if (server && !/^https?:\/\/[\w.:-]+$/.test(server)) throw new Error('서버 주소가 이상해요: ' + server);
+
 const ui = read('src/ui.html');
 const merged = ui
+  .replace('__SERVER_URL__', () => server)
   .replace('/*__ENGINE__*/', () => read('src/engine.js').trim())
   .replace('/*__AI__*/', () => read('src/ai.js').trim());
 
@@ -19,7 +30,7 @@ const merged = ui
 const scripts = [...merged.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
 scripts.forEach((s, i) => { new Function(s); });
 
-if (process.argv.includes('--artifact')) {
+if (artifact) {
   fs.mkdirSync(path.join(__dirname, 'dist'), { recursive: true });
   fs.writeFileSync(path.join(__dirname, 'dist/artifact.html'), merged);
   console.log('dist/artifact.html', (merged.length / 1024).toFixed(1) + 'KB');
@@ -63,5 +74,7 @@ ${bodyPart.trim()}
 </body>
 </html>
 `;
-fs.writeFileSync(path.join(__dirname, 'index.html'), html);
-console.log('index.html', (html.length / 1024).toFixed(1) + 'KB,', scripts.length, 'scripts OK');
+const out = arg('out') || 'index.html';
+fs.mkdirSync(path.dirname(path.join(__dirname, out)), { recursive: true });
+fs.writeFileSync(path.join(__dirname, out), html);
+console.log(out, (html.length / 1024).toFixed(1) + 'KB,', scripts.length, 'scripts OK,', server ? '서버 ' + server : '서버 없음(혼자 하기만)');
