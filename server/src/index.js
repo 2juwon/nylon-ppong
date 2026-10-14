@@ -7,7 +7,8 @@ import { DurableObject } from 'cloudflare:workers';
 import NP from '../../src/engine.js';
 import NPAI from '../../src/ai.js';
 import { Inbox, ADMIN_HTML } from './inbox.js';
-export { Inbox };
+import { Rank, BOARDS, defaultRules } from './rank.js';
+export { Inbox, Rank };
 
 const TURN_MS = 25000;   // 내 차례 제한 시간
 const CLAIM_MS = 10000;  // 뽕·박 결정 시간
@@ -33,6 +34,7 @@ const randomSeed = () => rand32() || 1;
 const lobbyStub = (env) => env.LOBBY.get(env.LOBBY.idFromName('main'));
 const roomStub = (env, code) => env.ROOM.get(env.ROOM.idFromName(code));
 const inboxStub = (env) => env.INBOX.get(env.INBOX.idFromName('main'));
+const rankStub = (env) => env.RANK.get(env.RANK.idFromName('main'));
 function adminOk(request, env) {
   const want = env.ADMIN_KEY || '';
   const got = request.headers.get('x-admin-key') || '';
@@ -290,9 +292,24 @@ export class Room extends DurableObject {
     const players = r.seats.map((s) => ({ name: s.name, kind: s.kind === 'ai' ? 'ai' : 'human', persona: s.persona }));
     r.game = NP.createGame({ players, rounds: r.settings.rounds, rules: r.settings.rules, seed: randomSeed(), firstDealer: rand32() % players.length });
     r.status = 'playing';
+    r.rankTickets = null;
     r.gen += 1;
     this.last = { action: { type: 'start' }, events: [{ t: 'deal', round: 1, dealer: r.game.dealer }], step: r.game.step };
     await this.afterChange({ last: true, lobby: true });
+  }
+
+  // 기본 규칙으로 끝난 게임이면 1등 한 사람에게 랭킹 등록 표를 줌
+  async issueRankTickets() {
+    const r = this.room, g = r.game;
+    r.rankTickets = null;
+    if (!defaultRules(g.rules) || !BOARDS.includes(`${g.rounds}-${g.players.length}`)) return;
+    const out = {};
+    for (const row of NP.standings(g)) {
+      const seat = r.seats[row.i];
+      if (row.rank !== 1 || !seat || seat.kind !== 'human' || !seat.pid) continue;
+      try { out[seat.pid] = await rankStub(this.env).onlineTicket({ score: row.score, rounds: g.rounds, n: g.players.length }); } catch (e) { console.error(e); }
+    }
+    r.rankTickets = out;
   }
 
   async backToWaiting() {
@@ -313,7 +330,10 @@ export class Room extends DurableObject {
     const events = NP.apply(g, a);
     this.last = { action: a, events, step: g.step };
     if (g.phase === 'roundEnd') r.seats.forEach((s) => { s.ready = false; });
-    if (g.phase === 'gameEnd') r.status = 'ended';
+    if (g.phase === 'gameEnd') {
+      r.status = 'ended';
+      await this.issueRankTickets();
+    }
     await this.afterChange({ last: true, lobby: g.phase === 'gameEnd' });
   }
 
@@ -394,12 +414,14 @@ export class Room extends DurableObject {
     };
     const claimWait = r.game && r.game.phase === 'claim' && r.pending ? r.pending.seat : -1;
     for (const ws of this.sockets()) {
-      const seat = this.seatOf(this.pidOf(ws));
+      const pid = this.pidOf(ws);
+      const seat = this.seatOf(pid);
       const msg = {
         ...base, seat,
         room: claimWait >= 0 && claimWait !== seat ? { ...base.room, deadline: 0 } : base.room,
         view: r.game && seat >= 0 ? NP.viewFor(r.game, seat) : null,
         last: last && seat >= 0 ? redact(last, seat) : null,
+        rankTicket: r.status === 'ended' && r.rankTickets && r.rankTickets[pid] || null,
       };
       try { ws.send(JSON.stringify(msg)); } catch (e) { /* 끊긴 소켓 */ }
     }
@@ -496,6 +518,22 @@ export default {
         const r = await inboxStub(env).add({ ...body, ua: request.headers.get('User-Agent') || '' }, who);
         return json(r, r.error ? 429 : 200);
       }
+      if (url.pathname === '/api/rank/ticket' && request.method === 'POST') {
+        const r = await rankStub(env).soloTicket(request.headers.get('CF-Connecting-IP') || 'anon');
+        return json(r, r.error ? 429 : 200);
+      }
+      if (url.pathname === '/api/rank/submit' && request.method === 'POST') {
+        if (+(request.headers.get('content-length') || 0) > 40000) return json({ error: '기록이 너무 길어요' }, 413);
+        let body = {};
+        try { body = await request.json(); } catch (e) { return json({ error: '보낸 내용을 읽지 못했어요' }, 400); }
+        const r = await rankStub(env).submit(body || {});
+        return json(r, r.error ? 400 : 200);
+      }
+      if (url.pathname === '/api/rank' && request.method === 'GET') {
+        const key = url.searchParams.get('board') || '5-4';
+        if (!BOARDS.includes(key)) return json({ error: '없는 랭킹이에요' }, 404);
+        return json(await rankStub(env).board(key));
+      }
       if (url.pathname === '/admin') return new Response(ADMIN_HTML, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-robots-tag': 'noindex', 'cache-control': 'no-store' } });
       if (url.pathname.startsWith('/api/admin/')) {
         if (!env.ADMIN_KEY) return json({ error: '관리자 비밀번호(ADMIN_KEY)가 아직 설정되지 않았어요' }, 503);
@@ -508,6 +546,9 @@ export default {
           return json({ ok: await inboxStub(env).setStatus(fm[1], b.status) });
         }
         if (fm && request.method === 'DELETE') return json({ ok: await inboxStub(env).remove(fm[1]) });
+        if (url.pathname === '/api/admin/rank' && request.method === 'GET') return json({ boards: await rankStub(env).all() });
+        const rm = url.pathname.match(/^\/api\/admin\/rank\/(\d{1,2}-\d)\/([a-f0-9]{12})$/);
+        if (rm && request.method === 'DELETE') return json({ ok: await rankStub(env).remove(rm[1], rm[2]) });
         return json({ error: 'not found' }, 404);
       }
       const m = url.pathname.match(/^\/ws\/(\d{6})$/);

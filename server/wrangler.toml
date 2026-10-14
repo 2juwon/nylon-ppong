@@ -26,3 +26,11 @@ class_name = "Inbox"
 [[migrations]]
 tag = "v2"
 new_sqlite_classes = ["Inbox"]
+
+[[durable_objects.bindings]]
+name = "RANK"
+class_name = "Rank"
+
+[[migrations]]
+tag = "v3"
+new_sqlite_classes = ["Rank"]

@@ -205,5 +205,12 @@
     }
   }
 
-  return { PERSONAS, decide, chooseDiscard, shouldStop, stopChance, knowledge, pAtLeast2 };
+  // 컴퓨터 판단에 쓰는 난수: 판의 씨앗과 진행 단계로 정해짐 → 서버가 같은 판을 그대로 다시 둘 수 있음 (랭킹 기록 확인용)
+  function rngFor(seed, step) {
+    return NP.mulberry32(((seed >>> 0) ^ Math.imul((step | 0) + 1, 0x85EBCA6B) ^ 0x5bd1e995) >>> 0 || 1);
+  }
+  // 혼자 하기의 컴퓨터 자리 (1번이 내 오른쪽)
+  const SOLO_CPUS = [['삼촌', 'bold'], ['할머니', 'careful'], ['이모', 'normal']];
+
+  return { PERSONAS, SOLO_CPUS, rngFor, decide, chooseDiscard, shouldStop, stopChance, knowledge, pAtLeast2 };
 });

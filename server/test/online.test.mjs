@@ -144,6 +144,19 @@ async function main() {
   await waitFor(() => A.last.room.status === 'ended', 180000, '게임 끝');
   assert.strictEqual(A.last.view.history.length, 3);
   console.log('✓ 3판 끝:', A.last.view.history.map((h) => h.kind).join(', '), '| 점수', A.last.view.players.map((p) => p.name + ' ' + p.score).join(', '));
+  { // 랭킹 표: 1등 한 사람에게만
+    await sleep(300);
+    const sc = A.last.view.players.map((p) => p.score), min = Math.min(...sc);
+    for (const X of [A, C]) {
+      const want = sc[X.last.seat] === min;
+      assert.strictEqual(!!X.last.rankTicket, want, '랭킹 표는 1등에게만');
+      if (X.last.rankTicket) {
+        const r = await fetch(BASE + '/api/rank/submit', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ticket: X.last.rankTicket, name: '온라인1등' }) }).then((x) => x.json());
+        assert.ok(r.ok, JSON.stringify(r));
+        console.log('✓ 온라인 1등 랭킹 등록:', r.board, r.place + '위', r.score + '점');
+      }
+    }
+  }
 
   // 6. 한 번 더 → 대기실
   A.send({ t: 'again' });

@@ -7,6 +7,7 @@ on:
       - 'server/**'
       - 'src/engine.js'
       - 'src/ai.js'
+      - 'src/replay.js'
       - '.github/workflows/deploy-server.yml'
   workflow_dispatch:
 

@@ -186,6 +186,41 @@ t('남의 패는 안 보임', () => {
   assert.strictEqual(v.deck, undefined);
 });
 
+// 랭킹 기록 확인: 내 수만 기록해도 서버가 같은 게임을 그대로 다시 둠
+{
+  const RP = require('../src/replay.js');
+  const playSolo = (cfg) => {
+    const g = RP.soloGame(cfg), log = [];
+    while (g.phase !== 'gameEnd') {
+      if (g.phase === 'roundEnd') { NP.apply(g, { type: 'next', p: 0 }); continue; }
+      const a = NP.actorOf(g);
+      const d = AI.decide(NP.viewFor(g, a), a === 0 ? 'normal' : g.players[a].persona, a === 0 ? AI.rngFor(cfg.seed ^ 77, g.step) : AI.rngFor(g.seed, g.step));
+      if (a === 0) log.push(RP.encode(d));
+      NP.apply(g, d);
+    }
+    return { g, log };
+  };
+  t('랭킹 다시 두기: 점수 일치', () => {
+    for (let s = 1; s <= 30; s++) {
+      const cfg = { seed: s * 7919, cpu: 1 + (s % 3), rounds: [3, 5, 10][s % 3] };
+      const { g, log } = playSolo(cfg);
+      const r = RP.replay(cfg, log);
+      assert.ok(r.ok);
+      assert.strictEqual(r.myScore, g.players[0].score);
+      assert.strictEqual(r.score != null, NP.standings(g).find((x) => x.i === 0).rank === 1);
+    }
+  });
+  t('랭킹 다시 두기: 고친 기록·다른 씨앗은 거절', () => {
+    const cfg = { seed: 4242, cpu: 3, rounds: 3 };
+    const { log } = playSolo(cfg);
+    assert.ok(!RP.replay(cfg, log.slice(0, -1)).ok);
+    assert.ok(!RP.replay(cfg, log.concat(['d'])).ok);
+    assert.ok(!RP.replay(Object.assign({}, cfg, { seed: 4243 }), log).ok);
+    assert.ok(!RP.replay(Object.assign({}, cfg, { cpu: 2 }), log).ok);
+    assert.ok(!RP.replay(cfg, log.map((x) => (x === 'd' ? 'x' : x))).ok);
+  });
+}
+
 console.log(`단위 테스트 ${pass}개 통과`);
 
 // ---------- 시뮬레이션 ----------

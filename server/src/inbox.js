@@ -49,7 +49,7 @@ export class Inbox extends DurableObject {
 
 // 관리자 페이지 (비밀번호는 브라우저에만 저장, 요청마다 헤더로 보냄)
 export const ADMIN_HTML = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>나일롱뽕 의견함</title>
+<title>나일롱뽕 관리</title>
 <style>
 :root{--bg:#474e35;--paper:#f1e7cf;--ink:#1c1913;--seal:#c3321f;--dim:#6a6250;--line:rgba(28,25,19,.14);--brass:#e2b24e}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif}
@@ -70,7 +70,10 @@ button.primary{background:var(--seal);color:var(--paper);border-color:var(--seal
 <div class="card" id="login"><div class="row"><input id="key" type="password" placeholder="관리자 비밀번호" autocomplete="current-password"><button class="primary" id="go">열기</button></div><p class="meta" id="msg"></p></div>
 <div id="box" hidden>
 <div class="card row filters"><button data-f="new" aria-pressed="true">새 의견</button><button data-f="all" aria-pressed="false">전체</button><button data-f="bug" aria-pressed="false">고장 신고만</button><span class="meta" id="count" style="margin-left:auto"></span><button id="reload">새로고침</button></div>
-<div id="list"></div></div>
+<div id="list"></div>
+<h1 style="margin-top:24px">랭킹</h1><p class="sub">이상한 이름이나 기록은 지울 수 있어요. 판 수-인원별로 상위 100개만 보관해요.</p>
+<div class="card row"><select id="board"></select><span class="meta" id="rcount"></span><button id="rreload" style="margin-left:auto">새로고침</button></div>
+<div class="card" id="rlist"></div></div>
 </main><script>
 const $=s=>document.querySelector(s);let key='';let items=[];let filter='new';
 try{key=localStorage.getItem('np-admin')||''}catch(e){}
@@ -91,5 +94,14 @@ const del=document.createElement('button');del.textContent='지우기';del.oncli
 a.append(done,del);c.append(a);L.append(c)}}
 $('#go').onclick=()=>{key=$('#key').value;load()};$('#key').onkeydown=e=>{if(e.key==='Enter'){key=$('#key').value;load()}};
 $('#reload').onclick=load;document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{filter=b.dataset.f;document.querySelectorAll('[data-f]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));draw()});
+let boards={};
+async function loadRank(){try{boards=(await api('/api/admin/rank')).boards;const sel=$('#board');const cur=sel.value||'5-4';sel.innerHTML='';for(const k of Object.keys(boards)){const [r,n]=k.split('-');const o=document.createElement('option');o.value=k;o.textContent=r+'판 · '+n+'명 ('+boards[k].list.length+')';sel.append(o)}sel.value=cur;drawRank()}catch(e){$('#rlist').textContent=e.message}}
+function drawRank(){const b=boards[$('#board').value];const L=$('#rlist');L.innerHTML='';if(!b)return;$('#rcount').textContent='등록 '+b.total+'번';if(!b.list.length){L.textContent='아직 기록이 없어요';L.className='card empty';return}L.className='card';
+b.list.forEach((e,i)=>{const row=document.createElement('div');row.className='row';row.style.padding='6px 0';row.style.borderBottom='1px solid var(--line)';
+const t=document.createElement('span');t.style.flex='1';t.textContent=(i+1)+'위  '+e.name+'  '+e.score+'점  ('+(e.mode==='online'?'사람들과':'컴퓨터와')+')';const m=document.createElement('span');m.className='meta';m.textContent=fmt(e.at);
+const del=document.createElement('button');del.textContent='지우기';del.onclick=async()=>{if(del.dataset.sure!=='1'){del.dataset.sure='1';del.textContent='한 번 더';return}await api('/api/admin/rank/'+$('#board').value+'/'+e.id,{method:'DELETE'});b.list=b.list.filter(x=>x.id!==e.id);drawRank()};
+row.append(t,m,del);L.append(row)})}
+$('#board').onchange=drawRank;$('#rreload').onclick=loadRank;
+const _load=load;load=async()=>{await _load();if(!$('#box').hidden)loadRank()};
 if(key)load();
 </script></body></html>`;
