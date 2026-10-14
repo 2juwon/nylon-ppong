@@ -761,6 +761,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
         if ([30, 50].includes(s.rules.stopPenalty)) out.rules.stopPenalty = s.rules.stopPenalty;
         if ([20, 30].includes(s.rules.bagaji)) out.rules.bagaji = s.rules.bagaji;
         out.rules.chongtongStrict = !!s.rules.chongtongStrict;
+        out.rules.battle = !!s.rules.battle;
         if (s.rules.rv === 2) out.rules.naturalFree = !!s.rules.naturalFree; // 예전 저장값은 새 기본값(빼 줌)으로
       }
     }
@@ -926,7 +927,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
       else cap = topE.by === HUMAN ? '내가 버림' : `${nameOf(topE.by)} 버림`;
     }
     $('#pileLabel').textContent = cap;
-    const iCanClaim = G.phase === 'claim' && G.claim && G.claim.p === HUMAN && !preview;
+    const iCanClaim = (G.phase === 'claim' || (G.phase === 'draw' && G.claim && G.claim.open)) && G.claim && G.claim.p === HUMAN && !preview;
     pile.classList.toggle('claimable', iCanClaim);
 
     // 나온 패
@@ -999,6 +1000,15 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
     if (G.phase === 'gameEnd') { box.appendChild(btn('최종 결과', 'gold', () => showGameEnd())); return; }
     const actor = NP.actorOf(G);
     if (actor == null || actor < 0) { box.appendChild(el('p', 'hint', '잠시만요…')); return; }
+    // 전투모드: 다음 사람이 가져가기 전에 먼저 눌러야 하는 뽕
+    if (G.phase === 'draw' && G.claim && G.claim.open && G.claim.p === HUMAN) {
+      box.appendChild(btn('뽕!', 'primary shout', () => act({ type: 'claim', p: HUMAN }), ''));
+      if (actor !== HUMAN) {
+        box.insertAdjacentHTML('beforeend', `<p class="hint" style="flex-basis:100%">${M(G.claim.card)}월 2장 내려놓기 · ${esc(nameOf(actor))}보다 먼저 누르세요!</p>`);
+        return;
+      }
+    }
+    if (G.phase === 'claim' && G.rules.battle) { box.appendChild(el('p', 'hint', G.claim && G.claim.p === HUMAN ? '이기는 패예요! 자동으로 가져가요' : '잠시만요…')); return; }
     if (actor !== HUMAN) {
       box.appendChild(el('p', 'hint', `${nameOf(actor)} 차례예요`));
       return;
@@ -1106,6 +1116,11 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
       actGuard = setTimeout(() => { if (busy && online) { busy = false; render(); } }, 5000);
       return;
     }
+    // 전투모드: 버린 직후 잠깐은 가져갈 수 없음 (그사이 뽕이 먼저 들어오면 이 가져오기는 취소됨)
+    if (G.rules.battle && a.p === HUMAN && (a.type === 'draw' || a.type === 'stop')) {
+      const rem = battleOpenAt + BATTLE.grace - Date.now();
+      if (rem > 0) { later(() => act(a), rem); return; }
+    }
     const g0 = gen;
     busy = true;
     clearTimers();
@@ -1117,6 +1132,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
       if (a.type === 'discard' || a.type === 'claim' || a.type === 'pass') selected = null;
       saveStore();
       await present(a, ev, from);
+      if (a.type === 'discard') battleOpenAt = Date.now();
     } catch (err) {
       console.error(err);
       if (gen === g0) say('그 행동은 지금 할 수 없어요');
@@ -1153,7 +1169,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
           const r = lastMini ? rectOf(lastMini) : seatHandRect(p);
           const to = r ? new DOMRect(r.left + (lastMini ? 8 : 0), r.top, 14, 22) : null;
           await fly(null, from.deck, to);
-          say(`${nameOf(p)} 차례 — 한 장 가져갔어요`);
+          say(ev.some((e) => e.t === 'missed' && e.p === HUMAN) ? `${nameOf(p)}가 먼저 가져갔어요 — <em>뽕</em> 기회를 놓쳤어요` : `${nameOf(p)} 차례 — 한 장 가져갔어요`);
         }
         break;
       }
@@ -1165,7 +1181,10 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
         Sound.tak();
         const who = p === HUMAN ? `${monthObj(a.card)} 버렸어요` : `${subj(p)} <em>${monthObj(a.card)}</em> 버렸어요`;
         const chance = ev.find((e) => e.t === 'claimChance');
-        if (chance && chance.p === HUMAN) {
+        if (chance && chance.p === HUMAN && chance.open) {
+          say(`${who} — <em>뽕!</em> 빨리 누르세요`);
+          Sound.ping();
+        } else if (chance && chance.p === HUMAN) {
           say(`${who} — <em>${chance.kind === 'ppong' ? '뽕' : chance.kind === 'bak' ? '박' : '자연바가지'}</em> 할 수 있어요!`);
           Sound.ping();
         } else if (ev.some((e) => e.t === 'exhaust')) {
@@ -1274,6 +1293,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
     if (G.phase === 'gameEnd') { if (shownFor !== endKey()) showGameEnd(); return; }
     const actor = NP.actorOf(G);
     if (actor < 0) return;
+    if (G.rules.battle) { battleTick(actor); return; }
     if (G.players[actor].kind === 'human') {
       if (G.phase === 'draw') say(NP.canStop(G, HUMAN) ? `내 차례 — 한 장 가져오거나 <em>스톱</em>할 수 있어요` : '내 차례 — 더미에서 한 장 가져오세요');
       return;
@@ -1283,6 +1303,23 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
     if (!a) return;
     const delay = G.phase === 'claim' ? T(380) : a.type === 'discard' ? T(520) : T(480);
     later(() => act(a), delay);
+  }
+
+  // 전투모드(혼자 하기): 컴퓨터가 가져가는 시간과 컴퓨터가 뽕 누르는 시간을 따로 재서 먼저 오는 쪽이 이김
+  const BATTLE = { grace: 700, draw: [1000, 2000], claim: [500, 1500], auto: 600 };
+  const between = ([a, b]) => Math.round(a + Math.random() * (b - a));
+  let battleOpenAt = 0;
+  function battleTick(actor) {
+    if (G.phase === 'claim') { const q = G.claim.p; later(() => act({ type: 'claim', p: q }), BATTLE.auto); return; } // 박·자연바가지는 자동
+    const c = G.claim && G.claim.open ? G.claim : null;
+    if (c && c.p !== HUMAN && c.p !== actor) later(() => act({ type: 'claim', p: c.p }), between(BATTLE.claim));
+    if (G.players[actor].kind === 'human') {
+      if (G.phase === 'draw' && !(c && c.p === HUMAN)) say(NP.canStop(G, HUMAN) ? `내 차례 — 한 장 가져오거나 <em>스톱</em>할 수 있어요` : '내 차례 — 더미에서 한 장 가져오세요');
+      return;
+    }
+    const a = NPAI.decide(NP.viewFor(G, actor), G.players[actor].persona, Math.random);
+    if (!a) return;
+    later(() => act(a), G.phase === 'draw' ? between(BATTLE.draw) : T(520));
   }
 
   function onCardClick(id) {
@@ -1398,6 +1435,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
       <h3>시작</h3><p>선은 6장, 나머지는 5장을 받아요. 남은 패는 더미로 쌓고 맨 윗장을 뒤집어 버림패 자리에 둡니다(이 패로는 뽕할 수 없어요). 선은 첫 차례에 한 장 버리기만 해요.</p>
       <h3>차례</h3><p>더미에서 한 장 가져오고 한 장 버려요. 차례는 반시계 방향이라 내 오른쪽 사람이 다음이에요.</p>
       <h3>뽕</h3><p>누가 버린 패와 같은 월을 2장 갖고 있으면 차례와 상관없이 뽕을 칠 수 있어요. 2장을 버림패 위에 내려놓고 남은 3장 중 1장을 버려요. 그러면 손에 2장만 남고, 다음 차례는 뽕한 사람의 오른쪽 사람이에요.</p>
+      ${r.battle ? '<h3>전투모드</h3><p>뽕을 기다려 주지 않아요. 패가 버려지면 바로 다음 사람 차례로 넘어가고, 다음 사람이 더미에서 패를 가져가기(또는 스톱하기) 전에 <b>뽕!</b>을 먼저 눌러야 뽕이 돼요. 늦으면 기회가 사라져요. 박·자연바가지는 자동으로 돼요. 버린 직후 0.7초는 다음 사람이 가져갈 수 없어요.</p>' : ''}
       <h3>박</h3><p>뽕하고 남은 2장이 같은 월인데 그 월이 또 버려지면 한 번 더 뽕, 이게 박이에요. 패를 다 털고 0점으로 이기고, 그 패를 버린 사람은 바가지를 써서 손패 합에 ${r.bagaji}점을 더 받아요.</p>
       <h3>자연뽕 · 자연바가지</h3><p>손에 같은 월 3장을 쥔 것이 자연뽕이에요. 자연뽕에 나머지 2장이 같은 월일 때 그 월이 버려져 뽕하면 패를 다 턴 것으로 쳐서 0점으로 이기고, 버린 사람은 바가지예요. ${r.naturalFree ? '스톱이나 더미가 떨어졌을 때 손에 쥔 자연뽕 3장은 점수에서 빼 줘요.' : '이 판에서는 자연뽕 3장도 점수에 그대로 세요.'}</p>
       <h3>스톱</h3><p>손패 합이 ${r.stopLimit} 이하면 내 차례에 패를 가져오는 대신 스톱을 외칠 수 있어요. 모두 패를 공개해서 내가 가장 낮으면 0점, 아니면(같은 점수가 있어도) 손패 합에 ${r.stopPenalty}점을 더 받아요.</p>
@@ -1424,6 +1462,10 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
   function seg(name, options, value) {
     return `<div class="seg" role="radiogroup">${options.map(([v, label]) => `<label><input type="radio" name="${name}" id="${name}-${v}" value="${v}"${String(v) === String(value) ? ' checked' : ''}><span>${label}</span></label>`).join('')}</div>`;
   }
+  function gameModeHTML(r) {
+    return `<div class="field"><span class="field-label">게임 모드</span>${seg('gmode', [['normal', '일반모드'], ['battle', '전투모드']], r.battle ? 'battle' : 'normal')}
+      <p class="note" style="margin:6px 0 0">${r.battle ? '전투모드: 뽕을 기다려 주지 않아요. 다음 사람이 패를 가져가기 전에 먼저 눌러야 해요. 박·자연바가지는 자동.' : '일반모드: 뽕할 수 있으면 할지 말지 고를 때까지 기다려 줘요.'}</p></div>`;
+  }
   function houseRulesHTML(r, open) {
     return `<details class="house"${open ? ' open' : ''}>
         <summary>지역 규칙</summary>
@@ -1437,7 +1479,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
   }
   function readRules(sh) {
     const val = (name) => { const i = sh.querySelector(`input[name="${name}"]:checked`); return i ? i.value : null; };
-    return { rv: 2, stopLimit: +val('stopLimit'), stopPenalty: +val('stopPenalty'), bagaji: +val('bagaji'), chongtongStrict: val('chong') === 'strict', naturalFree: val('natural') === 'free' };
+    return { rv: 2, stopLimit: +val('stopLimit'), stopPenalty: +val('stopPenalty'), bagaji: +val('bagaji'), chongtongStrict: val('chong') === 'strict', naturalFree: val('natural') === 'free', battle: val('gmode') === 'battle' };
   }
   function storedSolo() {
     const g = loadStore().game;
@@ -1465,6 +1507,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
         <div class="field"><span class="field-label">함께할 컴퓨터</span>${seg('cpu', [[1, '1명'], [2, '2명'], [3, '3명']], S.cpu)}</div>
         <div class="field"><span class="field-label">판 수</span>${seg('rounds', [[3, '3판'], [5, '5판'], [10, '10판']], S.rounds)}</div>
         <div class="field"><span class="field-label">진행 속도</span>${seg('speed', [['normal', '보통'], ['fast', '빠르게']], S.speed)}</div>
+        ${gameModeHTML(r)}
         ${houseRulesHTML(r)}
         <div class="sheet-actions">
           ${hasGame ? '<button class="btn" type="button" data-resume>이어서 하기</button>' : ''}
@@ -1483,6 +1526,10 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
       sh.querySelector('[data-pane="online"]').hidden = startMode !== 'online';
       sh.querySelector('[data-pane="solo"]').hidden = startMode !== 'solo';
       saveStore();
+    }));
+    sh.querySelectorAll('input[name="gmode"]').forEach((i) => i.addEventListener('change', () => {
+      const note = i.closest('.field').querySelector('.note');
+      if (note) note.textContent = val('gmode') === 'battle' ? '전투모드: 뽕을 기다려 주지 않아요. 다음 사람이 패를 가져가기 전에 먼저 눌러야 해요. 박·자연바가지는 자동.' : '일반모드: 뽕할 수 있으면 할지 말지 고를 때까지 기다려 줘요.';
     }));
     sh.querySelector('[data-start]').onclick = () => {
       S = cleanSettings({ cpu: +val('cpu'), rounds: +val('rounds'), speed: val('speed'), rules: readRules(sh) });
@@ -1925,6 +1972,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
 
   function rulesSummary(r) {
     const d = NP.DEFAULT_RULES, out = [];
+    if (r.battle) out.push('전투모드');
     if (r.stopLimit !== d.stopLimit) out.push(`스톱 ${r.stopLimit} 이하`);
     if (r.stopPenalty !== d.stopPenalty) out.push(`스톱 실패 +${r.stopPenalty}`);
     if (r.bagaji !== d.bagaji) out.push(`바가지 +${r.bagaji}`);
@@ -1946,6 +1994,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
       ? `<div class="field"><span class="field-label">인원</span>${seg('w-max', [[2, '2명'], [3, '3명'], [4, '4명']], st.max)}</div>
         <div class="field"><span class="field-label">판 수</span>${seg('w-rounds', [[3, '3판'], [5, '5판'], [10, '10판']], st.rounds)}</div>
         <div class="field"><span class="field-label">누가 들어올 수 있나요</span>${seg('w-public', [['no', '번호 아는 사람만'], ['yes', '빠른 참가에도 열기']], st.public ? 'yes' : 'no')}</div>
+        ${gameModeHTML(st.rules)}
         ${houseRulesHTML(st.rules)}`
       : `<p class="live">${st.max}명 · ${st.rounds}판 · ${st.public ? '공개 방' : '친구 방'}${rulesSummary(st.rules)}</p>`;
     const wasOpen = sheetKind === 'waiting' && !!document.querySelector('#sheet details.house[open]');
@@ -2033,6 +2082,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
   }
   function whyNoRecord() {
     if (!SERVER || !G) return '';
+    if (G.rules.battle) return '전투모드 게임은 아직 랭킹에 올릴 수 없어요.';
     if (!isDefaultRules(G.rules)) return '지역 규칙을 바꾼 게임은 랭킹에 올릴 수 없어요.';
     if (!online && !G.rank) return '서버에 연결되지 않은 채 시작한 게임이라 랭킹에 올릴 수 없어요.';
     return '';

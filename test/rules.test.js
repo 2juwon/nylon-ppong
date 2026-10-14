@@ -186,6 +186,48 @@ t('남의 패는 안 보임', () => {
   assert.strictEqual(v.deck, undefined);
 });
 
+// 전투모드
+t('전투모드: 버리면 바로 다음 차례, 뽕은 가져가기 전까지만', () => {
+  const R = Object.assign({}, R0, { battle: true });
+  const mk = () => {
+    const g = NP.createGame({ players: [{ name: 'A' }, { name: 'B' }, { name: 'C' }], rounds: 1, rules: R, seed: 5 });
+    g.players[0].hand = [C(1), C(2), C(3), C(4), C(5), C(6)];
+    g.players[1].hand = [C(7), C(8), C(9), C(10), C(11)];
+    g.players[2].hand = [C(1, 1), C(1, 2), C(9, 1), C(10, 1), C(11, 1)];
+    g.turn = 0; g.phase = 'discard';
+    return g;
+  };
+  let g = mk();
+  NP.apply(g, { type: 'discard', p: 0, card: C(1) });
+  assert.strictEqual(g.phase, 'draw');
+  assert.strictEqual(g.turn, 1);
+  assert.ok(g.claim && g.claim.open && g.claim.p === 2);
+  assert.strictEqual(NP.viewFor(g, 1).claim, null);       // 남은 모름
+  assert.strictEqual(NP.viewFor(g, 0).claim, null);
+  assert.ok(NP.viewFor(g, 2).claim.open);                   // 본인만 앎
+  assert.ok(NP.legalActions(g, 2).some((x) => x.type === 'claim'));
+  NP.apply(g, { type: 'claim', p: 2 });
+  assert.strictEqual(g.turn, 2);
+  assert.strictEqual(g.phase, 'discard');
+  assert.strictEqual(g.players[2].melds.length, 1);
+  g = mk();
+  NP.apply(g, { type: 'discard', p: 0, card: C(1) });
+  const ev = NP.apply(g, { type: 'draw', p: 1 });           // 다음 사람이 먼저 가져감
+  assert.ok(ev.some((e) => e.t === 'missed' && e.p === 2));
+  assert.strictEqual(g.claim, null);
+  assert.throws(() => NP.apply(g, { type: 'claim', p: 2 }));
+});
+t('전투모드: 박은 기다리는 단계로 (자동 처리용)', () => {
+  const g = NP.createGame({ players: [{ name: 'A' }, { name: 'B' }], rounds: 1, rules: Object.assign({}, R0, { battle: true }), seed: 5 });
+  g.players[0].hand = [C(1), C(2), C(3), C(4), C(5), C(6)];
+  g.players[1].hand = [C(1, 1), C(1, 2)];
+  g.players[1].melds = [[C(9), C(9, 1), C(9, 2)]];
+  g.turn = 0; g.phase = 'discard';
+  NP.apply(g, { type: 'discard', p: 0, card: C(1) });
+  assert.strictEqual(g.phase, 'claim');
+  assert.strictEqual(g.claim.kind, 'bak');
+});
+
 // 랭킹 기록 확인: 내 수만 기록해도 서버가 같은 게임을 그대로 다시 둠
 {
   const RP = require('../src/replay.js');
@@ -289,7 +331,8 @@ function runGames({ games, n, bots, rules, rounds, seed0 }) {
         checkInvariants(s);
         continue;
       }
-      const actor = NP.actorOf(s);
+      let actor = NP.actorOf(s);
+      if (s.claim && s.claim.open && rng() < 0.5) actor = s.claim.p; // 전투모드: 반쯤은 뽕할 사람이 먼저 누름
       const view = NP.viewFor(s, actor);
       const bot = bots[actor];
       const a = bot === 'random' ? randomBot(view, rng) : bot === 'greedy' ? greedyBot(view) : AI.decide(view, bot, rng);
@@ -324,5 +367,6 @@ report('컴퓨터 3명', runGames({ games: 600, n: 3, bots: ['normal', 'careful'
 report('AI 2 vs 무작위 2', runGames({ games: 600, n: 4, bots: ['normal', 'random', 'normal', 'random'], rounds: 5, seed0: 14 }), 4);
 report('AI 2 vs 높은패버리기 2', runGames({ games: 600, n: 4, bots: ['normal', 'greedy', 'normal', 'greedy'], rounds: 5, seed0: 15 }), 4);
 report('하우스룰: 스톱10/바가지30/엄격총통/자연뽕제외', runGames({ games: 400, n: 4, bots: ['normal', 'careful', 'bold', 'normal'], rounds: 5, seed0: 16, rules: { stopLimit: 10, bagaji: 30, stopPenalty: 50, chongtongStrict: true, naturalFree: true } }), 4);
+report('전투모드', runGames({ games: 400, n: 4, bots: ['normal', 'careful', 'bold', 'normal'], rounds: 5, seed0: 21, rules: { battle: true } }), 4);
 report('6명', runGames({ games: 200, n: 6, bots: ['normal', 'careful', 'bold', 'normal', 'careful', 'bold'], rounds: 3, seed0: 17 }), 6);
 console.log(`\n시뮬레이션 ${(Date.now() - t0) / 1000}s`);

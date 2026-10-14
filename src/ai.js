@@ -193,6 +193,7 @@
         if (view.claim && view.claim.p === p) return { type: 'claim', p };
         return null;
       case 'draw':
+        if (view.claim && view.claim.open && view.claim.p === p) return { type: 'claim', p }; // 전투모드: 먼저 누르기
         if (view.turn !== p) return null;
         if (shouldStop(view, persona, rng)) return { type: 'stop', p };
         return { type: 'draw', p };

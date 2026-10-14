@@ -15,6 +15,11 @@ const CLAIM_MS = 10000;  // 뽕·박 결정 시간
 const NEXT_MS = 30000;   // 판이 끝나고 다음 판까지 최대 대기
 const AWAY_MS = 1500;    // 자리 비운 사람 대신 둘 때
 const AI_MS = { draw: 800, discard: 1000, claim: 700 };
+const BATTLE_GRACE_MS = 700;           // 전투모드: 버린 뒤 이 시간 동안은 다음 사람이 못 가져감 (뽕 버튼 볼 틈)
+const BATTLE_AI_DRAW = [1000, 2000];   // 전투모드: 컴퓨터가 가져가기까지 (뽕할 사람이 있든 없든 같은 범위)
+const BATTLE_AI_CLAIM = [500, 1500];   // 전투모드: 컴퓨터가 뽕 누르기까지
+const BATTLE_AUTO_MS = 600;            // 전투모드: 박·자연바가지 자동 처리
+const between = ([a, b]) => a + Math.random() * (b - a);
 const EMPTY_ROOM_MS = 30 * 60 * 1000;  // 아무도 없으면 30분 뒤 방 정리
 const OPEN_ROOM_TTL = 10 * 60 * 1000;  // 빠른 참가에서 오래된 방은 제외
 const AI_POOL = [['삼촌', 'bold'], ['할머니', 'careful'], ['이모', 'normal'], ['고모', 'bold'], ['큰아빠', 'careful']];
@@ -63,6 +68,7 @@ function cleanSettings(cur, s) {
     if ([20, 30].includes(r.bagaji)) out.rules.bagaji = r.bagaji;
     if (typeof r.chongtongStrict === 'boolean') out.rules.chongtongStrict = r.chongtongStrict;
     if (typeof r.naturalFree === 'boolean') out.rules.naturalFree = r.naturalFree;
+    if (typeof r.battle === 'boolean') out.rules.battle = r.battle;
   }
   return out;
 }
@@ -71,7 +77,7 @@ function cleanSettings(cur, s) {
 function redact(last, seat) {
   const action = last.action.type === 'pass' && last.action.p !== seat ? { type: 'wait' } : last.action;
   const events = last.events
-    .filter((e) => (e.t !== 'claimChance' && e.t !== 'pass') || e.p === seat)
+    .filter((e) => (e.t !== 'claimChance' && e.t !== 'pass' && e.t !== 'missed') || e.p === seat)
     .map((e) => (e.t === 'draw' && e.p !== seat ? { t: 'draw', p: e.p } : e));
   return { action, events, step: last.step };
 }
@@ -105,7 +111,7 @@ export class Room extends DurableObject {
   async arm(p) {
     if (!this.room) return;
     this.room.pending = p || null;
-    this.room.deadline = p && p.visible ? p.at : 0;
+    this.room.deadline = p ? (p.deadlineAt != null ? p.deadlineAt : p.visible ? p.at : 0) : 0;
     if (p) await this.ctx.storage.setAlarm(p.at);
     else await this.ctx.storage.deleteAlarm();
   }
@@ -202,6 +208,13 @@ export class Room extends DurableObject {
           const ok = NP.legalActions(r.game, seat).some((l) => l.type === a.type && l.type !== 'next' &&
             (l.card === undefined ? a.card === undefined : l.card === a.card));
           if (!ok) { err('지금은 할 수 없는 행동이에요'); return this.afterChange(); }
+          // 전투모드: 버린 직후에는 잠깐 기다렸다가 가져감 (그사이 뽕이 먼저 들어오면 무효)
+          const wait = r.game.rules.battle && (a.type === 'draw' || a.type === 'stop') ? (r.lastDiscardAt || 0) + BATTLE_GRACE_MS * this.speed - Date.now() : 0;
+          if (wait > 0) {
+            const step = r.game.step;
+            await new Promise((res) => setTimeout(res, wait));
+            if (!this.room || !this.room.game || this.room.game.step !== step) return this.afterChange();
+          }
           return this.play(a);
         }
         case 'ready': {
@@ -328,6 +341,7 @@ export class Room extends DurableObject {
     const r = this.room;
     const g = r.game;
     const events = NP.apply(g, a);
+    if (a.type === 'discard') r.lastDiscardAt = Date.now();
     this.last = { action: a, events, step: g.step };
     if (g.phase === 'roundEnd') r.seats.forEach((s) => { s.ready = false; });
     if (g.phase === 'gameEnd') {
@@ -353,13 +367,33 @@ export class Room extends DurableObject {
     }
     const actor = NP.actorOf(g);
     if (actor < 0) return this.arm(null);
+    const battle = !!g.rules.battle;
+    const same = p && p.step === g.step;
+    // 전투모드의 박·자연바가지는 누구든 바로 자동으로
+    if (battle && g.phase === 'claim') {
+      if (same && p.kind === 'auto') return this.arm(p);
+      return this.arm({ kind: 'auto', seat: actor, step: g.step, at: now + BATTLE_AUTO_MS * this.speed });
+    }
+    const liveOf = (i) => { const s = r.seats[i]; return s.kind === 'human' && online.has(s.pid) && !s.away; };
     const seat = r.seats[actor];
-    const live = seat.kind === 'human' && online.has(seat.pid) && !seat.away;
+    const live = liveOf(actor);
     const kind = live ? 'timeout' : 'ai';
-    if (p && p.step === g.step && p.seat === actor && p.kind === kind) return this.arm(p); // 이미 기다리는 중
-    if (live) return this.arm({ kind, seat: actor, step: g.step, at: now + (g.phase === 'claim' ? CLAIM_MS : TURN_MS) * this.speed, visible: true });
-    const ms = seat.kind === 'human' ? AWAY_MS : (AI_MS[g.phase] || AI_MS.discard);
-    return this.arm({ kind, seat: actor, step: g.step, at: now + ms * this.speed });
+    // 차례인 사람: 사람이면 제한 시간, 컴퓨터·자리 비움이면 잠깐 뒤 대신 두기
+    let turn;
+    if (same && p.turn && p.turn.seat === actor && p.turn.kind === kind) turn = p.turn; // 이미 기다리는 중
+    else if (live) turn = { kind, seat: actor, at: now + (g.phase === 'claim' ? CLAIM_MS : TURN_MS) * this.speed, visible: true };
+    else {
+      const ms = seat.kind === 'human' ? AWAY_MS : battle && g.phase === 'draw' ? between(BATTLE_AI_DRAW) : (AI_MS[g.phase] || AI_MS.discard);
+      turn = { kind, seat: actor, at: now + ms * this.speed };
+    }
+    // 전투모드: 뽕할 수 있는 컴퓨터(또는 자리 비운 사람)도 따로 시간을 재서 누가 먼저인지 겨룸
+    let claim = null;
+    if (battle && g.claim && g.claim.open && !liveOf(g.claim.p)) {
+      claim = same && p.claim && p.claim.seat === g.claim.p ? p.claim : { kind: 'ai', seat: g.claim.p, at: now + between(BATTLE_AI_CLAIM) * this.speed };
+    }
+    const first = claim && claim.at < turn.at ? claim : turn;
+    // 남은 시간 표시는 언제나 차례인 사람 기준 (뽕할 사람이 있는지 티 나지 않게)
+    return this.arm({ ...first, step: g.step, turn, claim, deadlineAt: turn.visible ? turn.at : 0 });
   }
 
   async alarm() {
@@ -378,6 +412,7 @@ export class Room extends DurableObject {
       const g = r.game;
       if (!g || r.status !== 'playing' || g.step !== p.step) { r.pending = null; await this.afterChange(); return; }
       if (p.kind === 'next') { await this.play({ type: 'next', p: 0 }); return; }
+      if (p.kind === 'auto') { await this.play({ type: 'claim', p: p.seat }); return; }
       const seat = r.seats[p.seat];
       if (p.kind === 'timeout') {
         seat.timeouts = (seat.timeouts || 0) + 1;

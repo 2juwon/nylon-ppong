@@ -18,6 +18,7 @@
     bagaji: 20,             // 박·자연바가지를 맞은 사람이 더 받는 점수
     chongtongStrict: false, // true면 4-2 형태만 총통으로 인정
     naturalFree: true,      // 손패 속 자연뽕(같은 월 3장)은 점수에서 뺌 (기본값, 끄면 그대로 셈)
+    battle: false,          // 전투모드: 뽕은 기다려 주지 않음. 다음 사람이 패를 가져가기 전에 먼저 눌러야 함 (박·자연바가지는 자동)
   });
 
   const monthOf = (id) => (id >> 2) + 1; // 카드 id 0~47 → 월 1~12
@@ -184,6 +185,7 @@
     if (!pl) return out;
     switch (state.phase) {
       case 'draw':
+        if (state.claim && state.claim.open && state.claim.p === p) out.push({ type: 'claim', p });
         if (state.turn === p) {
           out.push({ type: 'draw', p });
           if (canStop(state, p)) out.push({ type: 'stop', p });
@@ -206,6 +208,14 @@
         break;
     }
     return out;
+  }
+
+  // 전투모드: 다음 사람이 움직이면 열려 있던 뽕 기회가 사라짐
+  function closeClaim(state, ev) {
+    if (state.claim && state.claim.open) {
+      ev.push({ t: 'missed', p: state.claim.p });
+      state.claim = null;
+    }
   }
 
   function advance(state, q, ev) {
@@ -280,6 +290,7 @@
     switch (a.type) {
       case 'draw': {
         if (state.phase !== 'draw' || state.turn !== p) fail('지금은 패를 가져올 수 없어요');
+        closeClaim(state, ev);
         const card = state.deck.pop();
         pl.hand.push(card);
         pl.drawsSinceMeld += 1;
@@ -289,6 +300,7 @@
       }
       case 'stop': {
         if (!canStop(state, p)) fail('지금은 스톱할 수 없어요');
+        closeClaim(state, ev);
         ev.push({ t: 'stop', p });
         endRound(state, { kind: 'stop', p }, ev);
         break;
@@ -311,9 +323,16 @@
         const q = findClaimer(state, p, a.card);
         if (q >= 0) {
           const kind = claimKind(state.players[q].hand, a.card);
-          state.claim = { p: q, from: p, card: a.card, kind };
-          state.phase = 'claim';
-          ev.push({ t: 'claimChance', p: q, from: p, card: a.card, kind });
+          if (state.rules.battle && kind === 'ppong' && state.deck.length > 0) {
+            // 전투모드: 바로 다음 사람 차례로 넘어가고, 그 사람이 가져가기 전까지만 뽕할 수 있음
+            state.claim = { p: q, from: p, card: a.card, kind, open: true };
+            ev.push({ t: 'claimChance', p: q, from: p, card: a.card, kind, open: true });
+            advance(state, (p + 1) % n, ev);
+          } else {
+            state.claim = { p: q, from: p, card: a.card, kind };
+            state.phase = 'claim';
+            ev.push({ t: 'claimChance', p: q, from: p, card: a.card, kind });
+          }
         } else {
           advance(state, (p + 1) % n, ev);
         }
@@ -321,7 +340,8 @@
       }
       case 'claim': {
         const c = state.claim;
-        if (state.phase !== 'claim' || !c || c.p !== p) fail('지금은 뽕할 수 없어요');
+        const openNow = !!(c && c.open && state.phase === 'draw');
+        if (!c || c.p !== p || !(state.phase === 'claim' || openNow)) fail('지금은 뽕할 수 없어요');
         const m = monthOf(c.card);
         const used = pl.hand.filter((x) => monthOf(x) === m).slice(0, 2);
         pl.hand = pl.hand.filter((x) => !used.includes(x));
@@ -370,9 +390,9 @@
     const reveal = state.phase === 'roundEnd' || state.phase === 'gameEnd';
     let claim = null;
     if (state.claim) {
-      claim = state.claim.p === p
-        ? Object.assign({}, state.claim)
-        : { pending: true, from: state.claim.from, card: state.claim.card };
+      if (state.claim.p === p) claim = Object.assign({}, state.claim);
+      else if (!state.claim.open) claim = { pending: true, from: state.claim.from, card: state.claim.card };
+      // 전투모드의 열린 뽕 기회는 본인만 앎
     }
     return {
       v: state.v, rules: state.rules, rounds: state.rounds, round: state.round, dealer: state.dealer,
