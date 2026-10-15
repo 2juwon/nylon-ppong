@@ -1450,7 +1450,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
   let sheetKind = null;  // 지금 열린 시트 종류
   let startMode = 'online';
   const recent = [];     // 최근 진행 기록 (고장 신고에 같이 보냄)
-  const BUILD = '2026-10-15T10:28';
+  const BUILD = '2026-10-15T10:37';
 
   const T = (ms) => (reduceMotion ? 0 : Math.round(ms * (S.speed === 'fast' ? 0.5 : 1)));
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -1856,13 +1856,15 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
         break;
       }
       case 'discard': {
+        battleOpenAt = Date.now() + 60000; // 패가 날아가는 동안은 가져오기 버튼을 숨김 (잠깐 보였다 사라지는 깜빡임 방지)
         render({ pileHidden: [a.card] });
         const top = rectOf($('#pile .card.top'));
         await fly(a.card, from.src, top, { spin: 8 });
         $('#pile .card.top') && $('#pile .card.top').classList.remove('incoming');
         Sound.tak();
         const who = p === HUMAN ? `${monthObj(a.card)} 버렸어요` : `${subj(p)} <em>${monthObj(a.card)}</em> 버렸어요`;
-        battleOpenAt = Date.now();
+        battleOpenAt = Date.now(); // 여기서부터 0.7초(뽕 가능하면 1.3초) 뒤에 가져오기 버튼
+        renderActions();
         const chance = ev.find((e) => e.t === 'claimChance');
         if (chance && chance.p === HUMAN && chance.open) {
           say(`${who} — <em>뽕!</em> 빨리 누르세요`);
@@ -2601,6 +2603,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
       preview = false;
       G = next;
       busy = false;
+      if (last && last.action.type === 'discard') battleOpenAt = Date.now();
     }
     if (selected != null && !G.players[HUMAN].hand.includes(selected)) selected = null;
     render();
