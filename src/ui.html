@@ -356,6 +356,7 @@ table.scores td.tag { color: var(--seal); }
 .me { position: relative; }
 .me > .tbar { top: -5px; bottom: auto; left: 0; right: 0; }
 .actions.wait { opacity: 0.55; pointer-events: none; }
+.actions.tall { min-height: 104px; align-content: center; }
 .clock { font-variant-numeric: tabular-nums; color: var(--brass); font-weight: 700; }
 .text-input {
   width: 100%; min-height: 46px; padding: 0 12px; border-radius: 10px;
@@ -997,6 +998,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
     const box = $('#actions');
     box.innerHTML = '';
     box.classList.toggle('wait', !!(online && busy && !dealing));
+    box.classList.toggle('tall', !!(G && G.rules && G.rules.battle)); // 전투모드: 뽕 버튼이 생겨도 높이가 안 변하게
     if (!G || preview || dealing) return;
     const me = G.players[HUMAN];
     if (G.phase === 'roundEnd') { box.appendChild(btn('점수표 보기', '', () => showRoundSheet())); return; }
@@ -1004,7 +1006,8 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
     const actor = NP.actorOf(G);
     if (actor == null || actor < 0) { box.appendChild(el('p', 'hint', '잠시만요…')); return; }
     // 전투모드: 다음 사람이 가져가기 전에 먼저 눌러야 하는 뽕
-    if (G.phase === 'draw' && G.claim && G.claim.open && G.claim.p === HUMAN) {
+    const mineOpen = G.phase === 'draw' && G.claim && G.claim.open && G.claim.p === HUMAN;
+    if (mineOpen) {
       box.appendChild(btn('뽕!', 'primary shout', () => act({ type: 'claim', p: HUMAN }), ''));
       if (actor !== HUMAN) {
         box.insertAdjacentHTML('beforeend', `<p class="hint" style="flex-basis:100%">${M(G.claim.card)}월 2장 내려놓기 · ${esc(nameOf(actor))}보다 먼저 누르세요!</p>`);
@@ -1018,9 +1021,19 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
     }
     const clock = online ? ' · <span class="clock" data-clock></span>' : '';
     if (G.phase === 'draw') {
-      box.appendChild(btn('한 장 가져오기', 'primary', () => act({ type: 'draw', p: HUMAN })));
+      // 전투모드: 버린 직후엔 가져오기 버튼을 잠깐 숨겨 둠 (뽕할 수 있으면 더 길게) → 뽕 누르려다 가져오기를 누르는 일 줄이기
+      const hold = drawHoldLeft(mineOpen);
+      const dbtn = btn('한 장 가져오기', 'primary', () => act({ type: 'draw', p: HUMAN }));
+      box.appendChild(dbtn);
+      let sbtn = null;
       if (NP.canStop(G, HUMAN)) {
-        box.appendChild(btn('스톱', 'gold', () => act({ type: 'stop', p: HUMAN }), `합 ${NP.handTotal(me.hand, G.rules)}`));
+        sbtn = btn('스톱', 'gold', () => act({ type: 'stop', p: HUMAN }), `합 ${NP.handTotal(me.hand, G.rules)}`);
+        box.appendChild(sbtn);
+      }
+      if (hold > 0) {
+        [dbtn, sbtn].forEach((b) => { if (b) { b.disabled = true; b.style.visibility = 'hidden'; } }); // 자리는 그대로 두고 안 보이게 → 나중에 나타나도 화면이 안 움직임
+        clearTimeout(holdTimer);
+        holdTimer = setTimeout(() => { if (!busy) renderActions(); }, hold + 30);
       }
     } else if (G.phase === 'discard') {
       const jk = NP.findWin(me.hand, G.rules);
@@ -1039,6 +1052,12 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
       box.insertAdjacentHTML('beforeend', `<p class="hint" style="flex-basis:100%">${sub}${clock}</p>`);
     }
     if (online && G.phase === 'draw') box.insertAdjacentHTML('beforeend', `<p class="hint" style="flex-basis:100%">남은 시간<span class="clock" data-clock style="margin-left:4px"></span></p>`);
+  }
+
+  let holdTimer = null;
+  function drawHoldLeft(mineOpen) {
+    if (!G || !G.rules.battle || G.phase !== 'draw' || G.turn !== HUMAN) return 0;
+    return (mineOpen ? BATTLE.holdClaim : BATTLE.grace) - (Date.now() - battleOpenAt);
   }
 
   function say(html) {
@@ -1183,6 +1202,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
         $('#pile .card.top') && $('#pile .card.top').classList.remove('incoming');
         Sound.tak();
         const who = p === HUMAN ? `${monthObj(a.card)} 버렸어요` : `${subj(p)} <em>${monthObj(a.card)}</em> 버렸어요`;
+        battleOpenAt = Date.now();
         const chance = ev.find((e) => e.t === 'claimChance');
         if (chance && chance.p === HUMAN && chance.open) {
           say(`${who} — <em>뽕!</em> 빨리 누르세요`);
@@ -1309,7 +1329,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
   }
 
   // 전투모드(혼자 하기): 컴퓨터가 가져가는 시간과 컴퓨터가 뽕 누르는 시간을 따로 재서 먼저 오는 쪽이 이김
-  const BATTLE = { grace: 700, draw: [1000, 2000], claim: [500, 1500], auto: 600 };
+  const BATTLE = { grace: 700, holdClaim: 1300, draw: [1000, 2000], claim: [500, 1500], auto: 600 };
   const between = ([a, b]) => Math.round(a + Math.random() * (b - a));
   let battleOpenAt = 0;
   function battleTick(actor) {
@@ -1724,7 +1744,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
       ${SERVER ? '<div class="sheet-actions" style="margin-top:6px"><button class="btn" type="button" data-ranking>랭킹 보기</button></div>' : ''}`, { dismiss: false, kind: 'end', noFocus: !!refresh || !!rec });
     if (rec) bindRecordBox(sh, rec, () => showGameEnd(true));
     const rkb = sh.querySelector('[data-ranking]');
-    if (rkb) rkb.onclick = () => showRanking({ board: `${G.rounds}-${G.players.length}`, back: () => showGameEnd(true) });
+    if (rkb) rkb.onclick = () => showRanking({ board: `${G.rounds}-4`, back: () => showGameEnd(true) });
     const again = sh.querySelector('[data-again]');
     if (again) again.onclick = () => {
       if (online) { Net.send({ t: 'again' }); again.disabled = true; return; }
@@ -2060,7 +2080,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
   const isDefaultRules = (r) => !!r && Object.keys(NP.DEFAULT_RULES).every((k) => r[k] === NP.DEFAULT_RULES[k]);
   // 혼자 하기 시작할 때 서버에서 씨앗을 받아 둠. 서버가 늦거나 지역 규칙을 바꾸면 랭킹 없이 그냥 시작
   async function rankTicket() {
-    if (!SERVER || !isDefaultRules(S.rules)) return null;
+    if (!SERVER || !isDefaultRules(S.rules) || S.cpu !== 3) return null; // 랭킹은 4명(컴퓨터 3명)일 때만
     try {
       const ctl = typeof AbortController === 'function' ? new AbortController() : null;
       const timer = setTimeout(() => ctl && ctl.abort(), 2500);
@@ -2079,18 +2099,20 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
     const mine = NP.standings(G).find((r) => r.i === HUMAN);
     if (mine.rank !== 1) return null;
     const n = G.players.length;
+    if (n !== 4) return null;
     if (online) return online.rankTicket ? { ticket: online.rankTicket, mode: 'online', score: mine.score, rounds: G.rounds, n, at: Date.now() } : null;
     if (!G.rank) return null;
     return { ticket: G.rank.ticket, mode: 'solo', score: mine.score, rounds: G.rounds, n, cpu: n - 1, log: G.rank.log.slice(), at: Date.now() };
   }
   function whyNoRecord() {
     if (!SERVER || !G) return '';
+    if (G.players.length !== 4) return '랭킹은 4명이서 한 게임만 올라가요.';
     if (G.rules.battle) return '전투모드 게임은 아직 랭킹에 올릴 수 없어요.';
     if (!isDefaultRules(G.rules)) return '지역 규칙을 바꾼 게임은 랭킹에 올릴 수 없어요.';
     if (!online && !G.rank) return '서버에 연결되지 않은 채 시작한 게임이라 랭킹에 올릴 수 없어요.';
     return '';
   }
-  const boardLabel = (rec) => `${rec.rounds}판 · ${rec.n}명`;
+  const boardLabel = (rec) => `${rec.rounds}판`;
   function recordBoxHTML(rec) {
     if (recordUI.done && recordUI.key === rec.ticket) {
       const d = recordUI.done;
@@ -2139,14 +2161,13 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
   }
   function showRanking(opts = {}) {
     const pend = loadJSON(RECORD_KEY, null);
-    const st = { board: opts.board || (pend ? `${pend.rounds}-${pend.n}` : `${S.rounds}-${S.cpu + 1}`) };
+    const st = { board: opts.board || `${pend ? pend.rounds : S.rounds}-4` };
     if (recordUI.key !== (pend && pend.ticket)) recordUI = { key: pend && pend.ticket, name: '', done: null, msg: '' };
-    const [r0, n0] = st.board.split('-');
+    const [r0] = st.board.split('-');
     const sh = openSheet(`
-      <div class="sheet-head"><span class="seal-mark" aria-hidden="true">榜</span><div><h2 id="sheetTitle">랭킹</h2><p class="lede">1등 한 게임의 최종 점수예요. 낮을수록 위, 같은 점수면 먼저 올린 사람이 위.</p></div></div>
+      <div class="sheet-head"><span class="seal-mark" aria-hidden="true">榜</span><div><h2 id="sheetTitle">랭킹</h2><p class="lede">4명이서 1등 한 게임의 최종 점수예요. 낮을수록 위, 같은 점수면 먼저 올린 사람이 위.</p></div></div>
       ${pend && !(recordUI.done) ? recordBoxHTML(pend) : ''}
       <div class="field"><span class="field-label">판 수</span>${seg('rk-rounds', [[3, '3판'], [5, '5판'], [10, '10판']], +r0)}</div>
-      <div class="field"><span class="field-label">인원</span>${seg('rk-n', [[2, '2명'], [3, '3명'], [4, '4명']], +n0)}</div>
       <div data-board><p class="board-empty">불러오는 중…</p></div>
       <div class="sheet-actions"><button class="btn primary" type="button" data-close data-autofocus>${opts.back ? '돌아가기' : '닫기'}</button></div>`, { kind: 'ranking' });
     if (pend && !recordUI.done) bindRecordBox(sh, pend, () => showRanking(opts));
@@ -2154,7 +2175,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
     const mine = new Set(loadJSON(MINE_KEY, []));
     let seq = 0;
     const load = async () => {
-      const r = (sh.querySelector('input[name="rk-rounds"]:checked') || {}).value, n = (sh.querySelector('input[name="rk-n"]:checked') || {}).value;
+      const r = (sh.querySelector('input[name="rk-rounds"]:checked') || {}).value, n = 4;
       const key = `${r}-${n}`, my = ++seq, box = sh.querySelector('[data-board]');
       opts.board = key;
       box.innerHTML = '<p class="board-empty">불러오는 중…</p>';
@@ -2165,12 +2186,12 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
         if (!res.ok || !Array.isArray(j.list)) throw new Error();
         box.innerHTML = j.list.length
           ? `<ol class="board">${j.list.map((e, i) => `<li class="${mine.has(e.id) ? 'mine' : ''}"><span class="rk">${i + 1}</span><span class="nm">${esc(e.name)}</span><span class="md">${e.mode === 'online' ? '사람들과' : '컴퓨터와'} · ${new Date(e.at).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })}</span><span class="pts">${e.score}</span></li>`).join('')}</ol>`
-          : `<p class="board-empty">${r}판 · ${n}명 랭킹은 아직 비어 있어요.<br>1등 하고 첫 이름을 올려 보세요!</p>`;
+          : `<p class="board-empty">${r}판 랭킹은 아직 비어 있어요.<br>1등 하고 첫 이름을 올려 보세요!</p>`;
       } catch (e) {
         if (my === seq) box.innerHTML = '<p class="board-empty">랭킹을 불러오지 못했어요. 잠시 뒤에 다시 열어 주세요.</p>';
       }
     };
-    sh.querySelectorAll('input[name="rk-rounds"],input[name="rk-n"]').forEach((i) => i.addEventListener('change', load));
+    sh.querySelectorAll('input[name="rk-rounds"]').forEach((i) => i.addEventListener('change', load));
     load();
   }
 
@@ -2307,7 +2328,11 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
     if (Sound.on) { Sound.unlock(); Sound.tak(); }
     saveStore();
   };
-  $('#deck').onclick = () => { if (G && !preview && G.phase === 'draw' && G.turn === HUMAN) act({ type: 'draw', p: HUMAN }); };
+  $('#deck').onclick = () => {
+    if (!G || preview || G.phase !== 'draw' || G.turn !== HUMAN) return;
+    if (drawHoldLeft(G.claim && G.claim.open && G.claim.p === HUMAN) > 0) return; // 전투모드: 뽕 누를 틈
+    act({ type: 'draw', p: HUMAN });
+  };
 
   function boot(data) {
     buildSprite();

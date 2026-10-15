@@ -1,7 +1,7 @@
 /* 랭킹: 1등 한 게임의 최종 점수를 닉네임과 함께 저장 (낮을수록 위)
  * - 혼자 하기: 시작할 때 받은 표(씨앗)로 서버가 게임을 처음부터 다시 둬서 점수를 확인
  * - 사람들과: 방 서버가 판을 끝내며 1등에게 점수가 적힌 표를 줌
- * 표는 한 번만 쓸 수 있고 3일 지나면 사라짐. 판 수 × 인원마다 따로 상위 100개만 보관
+ * 표는 한 번만 쓸 수 있고 3일 지나면 사라짐. 4명 게임만, 판 수(3·5·10)마다 따로 상위 100개만 보관
  */
 import { DurableObject } from 'cloudflare:workers';
 import NP from '../../src/engine.js';
@@ -10,7 +10,7 @@ import NPReplay from '../../src/replay.js';
 const KEEP = 100;
 const TICKET_TTL = 3 * 24 * 3600 * 1000;
 const TICKETS_PER_HOUR = 60;
-export const BOARDS = [3, 5, 10].flatMap((r) => [2, 3, 4].map((n) => `${r}-${n}`));
+export const BOARDS = [3, 5, 10].map((r) => `${r}-4`); // 랭킹은 4명이서 한 게임만
 
 function rand32() { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0]; }
 const hex = (bytes) => Array.from(crypto.getRandomValues(new Uint8Array(bytes)), (b) => b.toString(16).padStart(2, '0')).join('');
