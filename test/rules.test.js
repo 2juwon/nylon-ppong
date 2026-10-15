@@ -14,7 +14,9 @@ function t(name, fn) { fn(); pass++; }
 t('뽕', () => assert.strictEqual(NP.claimKind([C(1, 0), C(1, 1), C(4), C(7), C(9)], C(1, 2)), 'ppong'));
 t('박', () => assert.strictEqual(NP.claimKind([C(5, 0), C(5, 1)], C(5, 2)), 'bak'));
 t('자연바가지', () => assert.strictEqual(NP.claimKind([C(3, 0), C(3, 1), C(3, 2), C(7, 0), C(7, 1)], C(7, 2)), 'jayeon'));
-t('자연뽕 월로 뽕은 일반 뽕', () => assert.strictEqual(NP.claimKind([C(3, 0), C(3, 1), C(3, 2), C(7, 0), C(7, 1)], C(3, 3)), 'ppong'));
+t('4-2 자연바가지 (기본 인정)', () => assert.strictEqual(NP.claimKind([C(3, 0), C(3, 1), C(3, 2), C(7, 0), C(7, 1)], C(3, 3), NP.DEFAULT_RULES), 'jayeon'));
+t('4-2 끄면 일반 뽕', () => assert.strictEqual(NP.claimKind([C(3, 0), C(3, 1), C(3, 2), C(7, 0), C(7, 1)], C(3, 3), Object.assign({}, NP.DEFAULT_RULES, { jayeon42: false })), 'ppong'));
+t('4-2인데 나머지 2장이 다르면 일반 뽕', () => assert.strictEqual(NP.claimKind([C(3, 0), C(3, 1), C(3, 2), C(7, 0), C(8, 1)], C(3, 3), NP.DEFAULT_RULES), 'ppong'));
 t('한 장뿐이면 불가', () => assert.strictEqual(NP.claimKind([C(5, 0), C(6, 1)], C(5, 2)), null));
 t('5장에 1장뿐이면 불가', () => assert.strictEqual(NP.claimKind([C(5, 0), C(6), C(7), C(8), C(9)], C(5, 2)), null));
 

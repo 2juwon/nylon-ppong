@@ -69,6 +69,7 @@ function cleanSettings(cur, s) {
     if (typeof r.chongtongStrict === 'boolean') out.rules.chongtongStrict = r.chongtongStrict;
     if (typeof r.naturalFree === 'boolean') out.rules.naturalFree = r.naturalFree;
     if (typeof r.battle === 'boolean') out.rules.battle = r.battle;
+    if (typeof r.jayeon42 === 'boolean') out.rules.jayeon42 = r.jayeon42;
   }
   return out;
 }

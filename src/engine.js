@@ -18,6 +18,7 @@
     bagaji: 20,             // 박·자연바가지를 맞은 사람이 더 받는 점수
     chongtongStrict: false, // true면 4-2 형태만 총통으로 인정
     naturalFree: true,      // 손패 속 자연뽕(같은 월 3장)은 점수에서 뺌 (기본값, 끄면 그대로 셈)
+    jayeon42: true,         // 손에 3장+2장일 때 3장짜리 월이 버려져 4-2가 되면 자연바가지로 봄 (나무위키엔 없는 지역 규칙, 끄면 일반 뽕)
     battle: false,          // 전투모드: 뽕은 기다려 주지 않음. 다음 사람이 패를 가져가기 전에 먼저 눌러야 함 (박·자연바가지는 자동)
   });
 
@@ -97,7 +98,7 @@
   }
 
   // 버림패 card에 대해 이 손패로 할 수 있는 것: null | 'ppong' | 'bak' | 'jayeon'
-  function claimKind(hand, card) {
+  function claimKind(hand, card, rules) {
     const m = monthOf(card);
     const same = hand.filter((x) => monthOf(x) === m);
     if (same.length < 2) return null;
@@ -106,6 +107,9 @@
       const used = same.slice(0, 2);
       const rest = hand.filter((x) => !used.includes(x));
       if (rest.length === 3 && rest.every((x) => monthOf(x) === monthOf(rest[0]))) return 'jayeon';
+      // 4-2: 같은 월 3장을 쥐고 있는데 그 월이 버려짐 + 나머지 2장이 같은 월
+      const others = hand.filter((x) => monthOf(x) !== m);
+      if (rules && rules.jayeon42 && same.length === 3 && others.length === 2 && monthOf(others[0]) === monthOf(others[1])) return 'jayeon';
     }
     return 'ppong';
   }
@@ -167,7 +171,7 @@
     const n = state.players.length;
     for (let k = 1; k < n; k++) {
       const q = (from + k) % n;
-      if (claimKind(state.players[q].hand, card)) return q;
+      if (claimKind(state.players[q].hand, card, state.rules)) return q;
     }
     return -1;
   }
@@ -322,7 +326,7 @@
         ev.push({ t: 'discard', p, card: a.card });
         const q = findClaimer(state, p, a.card);
         if (q >= 0) {
-          const kind = claimKind(state.players[q].hand, a.card);
+          const kind = claimKind(state.players[q].hand, a.card, state.rules);
           if (state.rules.battle && kind === 'ppong' && state.deck.length > 0) {
             // 전투모드: 바로 다음 사람 차례로 넘어가고, 그 사람이 가져가기 전까지만 뽕할 수 있음
             state.claim = { p: q, from: p, card: a.card, kind, open: true };
