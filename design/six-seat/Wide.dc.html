@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>가로 타원 테이블</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&amp;family=IBM+Plex+Sans+KR:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#e2b24e}a:hover{color:#f3ecd9}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #474e35; font-family: 'IBM Plex Sans KR', sans-serif; color: #f3ecd9">
+
+  <!-- 왼쪽 위 이름표 -->
+  <div style="position: absolute; left: 24px; top: 20px; display: flex; align-items: center; gap: 10px">
+    <div style="width: 40px; height: 40px; border-radius: 9px; background: #c3321f; color: #f1e7cf; display: flex; align-items: center; justify-content: center; font-family: 'Black Han Sans', sans-serif; font-size: 20px; transform: rotate(-6deg)">뽕</div>
+    <div style="display: flex; flex-direction: column">
+      <span style="font-family: 'Black Han Sans', sans-serif; font-size: 24px; line-height: 1">나일롱뽕</span>
+      <span style="font-size: 13px; color: #c4bf9f">2 / 5판 · 6명</span>
+    </div>
+  </div>
+
+  <!-- 타원 탁자 -->
+  <div style="position: absolute; left: 170px; top: 50px; width: 940px; height: 480px; border-radius: 50%; background: #5a3a22; box-shadow: 0 24px 60px rgba(10, 12, 6, 0.55)"></div>
+  <div style="position: absolute; left: 186px; top: 66px; width: 908px; height: 448px; border-radius: 50%; background: #2f5d43; box-shadow: inset 0 0 0 2px rgba(226, 178, 78, 0.45), inset 0 14px 60px rgba(0, 0, 0, 0.35)"></div>
+
+  <!-- 가운데 -->
+  <div style="position: absolute; left: 0; right: 0; top: 196px; display: flex; justify-content: center; gap: 28px">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+      <div style="width: 76px; height: 120px; border-radius: 9px; background: #c3321f; box-shadow: 3px 3px 0 #8d2014, 6px 6px 0 #6f190f; display: flex; align-items: center; justify-content: center"><div style="width: 30px; height: 30px; border-radius: 50%; background: #a92a19"></div></div>
+      <span style="font-size: 13px; color: #c4bf9f">더미 19장</span>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+      <div style="width: 76px; height: 120px; border-radius: 9px; background: #f1e7cf; position: relative; box-shadow: 0 0 0 3px #e2b24e, 0 6px 14px rgba(0, 0, 0, 0.4)">
+        <span style="position: absolute; left: 6px; top: 6px; background: #1c1913; color: #f1e7cf; font-family: 'Black Han Sans', sans-serif; font-size: 14px; padding: 3px 7px; border-radius: 4px">7</span>
+        <div style="position: absolute; left: 22px; top: 42px; width: 34px; height: 54px; border-radius: 40% 40% 50% 50%; background: #b8301d"></div>
+      </div>
+      <span style="font-size: 13px; color: #c4bf9f">고모 버림</span>
+    </div>
+  </div>
+  <div style="position: absolute; left: 0; right: 0; top: 372px; text-align: center; font-size: 14px; color: #e2b24e">↺ 차례는 반시계 방향 · 지금 삼촌</div>
+
+  <!-- 상대 5명 -->
+  <div style="position: absolute; left: 987px; top: 352px; width: 120px; padding: 8px 6px; border-radius: 16px; background: rgba(28, 25, 19, 0.82); box-shadow: 0 0 0 2px #e2b24e; display: flex; flex-direction: column; align-items: center; gap: 4px">
+    <div style="width: 44px; height: 44px; border-radius: 50%; background: #2f6c64; display: flex; align-items: center; justify-content: center; font-family: 'Black Han Sans', sans-serif; font-size: 19px">삼</div>
+    <span style="font-weight: 700; font-size: 15px">삼촌</span>
+    <div style="display: flex; gap: 3px"><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i></div>
+    <span style="font-size: 13px; color: #c4bf9f">32점</span>
+  </div>
+  <div style="position: absolute; left: 987px; top: 108px; width: 120px; padding: 8px 6px; border-radius: 16px; background: rgba(28, 25, 19, 0.82); display: flex; flex-direction: column; align-items: center; gap: 4px">
+    <div style="width: 44px; height: 44px; border-radius: 50%; background: #7e3d5c; display: flex; align-items: center; justify-content: center; font-family: 'Black Han Sans', sans-serif; font-size: 19px">할</div>
+    <span style="font-weight: 700; font-size: 15px">할머니</span>
+    <div style="display: flex; gap: 3px"><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i></div>
+    <span style="font-size: 13px; color: #c4bf9f">뽕 ×1 · 11점</span>
+  </div>
+  <div style="position: absolute; left: 580px; top: 8px; width: 120px; padding: 8px 6px; border-radius: 16px; background: rgba(28, 25, 19, 0.82); display: flex; flex-direction: column; align-items: center; gap: 4px">
+    <div style="width: 44px; height: 44px; border-radius: 50%; background: #9a6a25; display: flex; align-items: center; justify-content: center; font-family: 'Black Han Sans', sans-serif; font-size: 19px">이</div>
+    <span style="font-weight: 700; font-size: 15px">이모</span>
+    <div style="display: flex; gap: 3px"><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i></div>
+    <span style="font-size: 13px; color: #c4bf9f">0점</span>
+  </div>
+  <div style="position: absolute; left: 173px; top: 108px; width: 120px; padding: 8px 6px; border-radius: 16px; background: rgba(28, 25, 19, 0.82); display: flex; flex-direction: column; align-items: center; gap: 4px">
+    <div style="width: 44px; height: 44px; border-radius: 50%; background: #4f5f86; display: flex; align-items: center; justify-content: center; font-family: 'Black Han Sans', sans-serif; font-size: 19px">고</div>
+    <span style="font-weight: 700; font-size: 15px">고모</span>
+    <div style="display: flex; gap: 3px"><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i></div>
+    <span style="font-size: 13px; color: #c4bf9f">24점</span>
+  </div>
+  <div style="position: absolute; left: 173px; top: 352px; width: 120px; padding: 8px 6px; border-radius: 16px; background: rgba(28, 25, 19, 0.82); display: flex; flex-direction: column; align-items: center; gap: 4px">
+    <div style="width: 44px; height: 44px; border-radius: 50%; background: #5b4aa3; display: flex; align-items: center; justify-content: center; font-family: 'Black Han Sans', sans-serif; font-size: 19px">큰</div>
+    <span style="font-weight: 700; font-size: 15px">큰아빠</span>
+    <div style="display: flex; gap: 3px"><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i><i style="width: 10px; height: 15px; border-radius: 2px; background: #c3321f"></i></div>
+    <span style="font-size: 13px; color: #c4bf9f">18점</span>
+  </div>
+
+  <!-- 나: 아래 가운데 -->
+  <div style="position: absolute; left: 0; right: 0; top: 548px; display: flex; justify-content: center; gap: 10px">
+    <div style="width: 74px; height: 116px; border-radius: 8px; background: #f1e7cf; position: relative; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35)"><span style="position: absolute; left: 6px; top: 6px; background: #1c1913; color: #f1e7cf; font-family: 'Black Han Sans', sans-serif; font-size: 14px; padding: 3px 7px; border-radius: 4px">1</span><div style="position: absolute; right: 10px; top: 34px; width: 30px; height: 30px; border-radius: 50%; background: #c3321f"></div><div style="position: absolute; left: 0; right: 0; bottom: 0; height: 30px; border-radius: 0 0 8px 8px; background: #1c1913"></div></div>
+    <div style="width: 74px; height: 116px; border-radius: 8px; background: #f1e7cf; position: relative; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35)"><span style="position: absolute; left: 6px; top: 6px; background: #1c1913; color: #f1e7cf; font-family: 'Black Han Sans', sans-serif; font-size: 14px; padding: 3px 7px; border-radius: 4px">2</span><div style="position: absolute; left: 16px; top: 46px; width: 14px; height: 14px; border-radius: 50%; background: #c3321f"></div><div style="position: absolute; left: 40px; top: 66px; width: 14px; height: 14px; border-radius: 50%; background: #c3321f"></div><div style="position: absolute; left: 26px; top: 86px; width: 12px; height: 12px; border-radius: 50%; background: #c3321f"></div></div>
+    <div style="width: 74px; height: 116px; border-radius: 8px; background: #f1e7cf; position: relative; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35)"><span style="position: absolute; left: 6px; top: 6px; background: #1c1913; color: #f1e7cf; font-family: 'Black Han Sans', sans-serif; font-size: 14px; padding: 3px 7px; border-radius: 4px">7</span><div style="position: absolute; left: 20px; top: 40px; width: 34px; height: 54px; border-radius: 40% 40% 50% 50%; background: #b8301d"></div></div>
+    <div style="width: 74px; height: 116px; border-radius: 8px; background: #f1e7cf; position: relative; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35)"><span style="position: absolute; left: 6px; top: 6px; background: #1c1913; color: #f1e7cf; font-family: 'Black Han Sans', sans-serif; font-size: 14px; padding: 3px 7px; border-radius: 4px">11</span><div style="position: absolute; left: 31px; top: 32px; width: 12px; height: 40px; border-radius: 6px; background: #e2b24e"></div><div style="position: absolute; left: 14px; top: 76px; width: 46px; height: 28px; border-radius: 50% 50% 40% 40%; background: #1c1913"></div></div>
+    <div style="width: 74px; height: 116px; border-radius: 8px; background: #f1e7cf; position: relative; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35)"><span style="position: absolute; left: 6px; top: 6px; background: #1c1913; color: #f1e7cf; font-family: 'Black Han Sans', sans-serif; font-size: 14px; padding: 3px 7px; border-radius: 4px">12</span><div style="position: absolute; left: 16px; top: 36px; width: 3px; height: 70px; background: #3f7d4f"></div><div style="position: absolute; left: 36px; top: 30px; width: 3px; height: 76px; background: #3f7d4f"></div><div style="position: absolute; left: 56px; top: 38px; width: 3px; height: 68px; background: #3f7d4f"></div></div>
+  </div>
+  <div style="position: absolute; left: 0; right: 0; top: 678px; display: flex; justify-content: center; align-items: center; gap: 10px; font-size: 14px; color: #c4bf9f">
+    <div style="width: 26px; height: 26px; border-radius: 50%; background: #c3321f; display: flex; align-items: center; justify-content: center; font-family: 'Black Han Sans', sans-serif; font-size: 13px; color: #f3ecd9">나</div>
+    <span>손패 합 26 · 누적 12</span>
+  </div>
+
+  <!-- 오른쪽 아래: 행동 자리 -->
+  <div style="position: absolute; right: 24px; bottom: 24px; width: 220px; min-height: 120px; padding: 14px; box-sizing: border-box; border-radius: 16px; background: rgba(28, 25, 19, 0.45); display: flex; flex-direction: column; justify-content: center; gap: 6px">
+    <span style="font-size: 14px; font-weight: 700">삼촌 차례예요</span>
+    <span style="font-size: 13px; color: #c4bf9f">뽕·가져오기 버튼은 여기에. 손패를 가리지 않고 자리가 고정돼요</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

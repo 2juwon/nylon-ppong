@@ -1,0 +1,18 @@
+{
+  "v": 3,
+  "createdOnFiles": {"v": 1, "at": "2026-10-15T10:40:00Z"},
+  "title": "나일롱뽕 6인 테이블 배치",
+  "launch": {"view": "canvas"},
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {"x": 0, "y": 0, "w": 390, "h": 844, "title": "A. 원형 탁자 (휴대폰)"},
+    "Fan.dc.html": {"x": 470, "y": 0, "w": 390, "h": 844, "title": "B. 카지노 반원 (휴대폰)"},
+    "Rows.dc.html": {"x": 940, "y": 0, "w": 390, "h": 844, "title": "C. 지금 방식 늘리기 (휴대폰)"},
+    "Wide.dc.html": {"x": 0, "y": 964, "w": 1280, "h": 720, "title": "D. 가로 타원 테이블 (태블릿·PC)"}
+  },
+  "order": ["Main.dc.html", "Fan.dc.html", "Rows.dc.html", "Wide.dc.html"],
+  "notes": {
+    "head": {"x": 0, "y": -300, "text": "나일롱뽕 6인 배치 시안", "kind": "title1", "maxW": 1330}
+  },
+  "designSystems": []
+}
