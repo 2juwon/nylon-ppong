@@ -22,6 +22,10 @@
     battle: false,          // 전투모드: 뽕은 기다려 주지 않음. 다음 사람이 패를 가져가기 전에 먼저 눌러야 함 (박·자연바가지는 자동)
   });
 
+  // 규칙이나 판 진행 방식이 바뀌면 1씩 올림. 랭킹 기록은 게임 화면과 서버의 값이 같아야만 받음
+  // (예전 화면을 열어 둔 채 서버만 바뀌면 서버가 다시 둔 결과가 달라질 수 있어서)
+  const RULES_VERSION = 2;
+
   const monthOf = (id) => (id >> 2) + 1; // 카드 id 0~47 → 월 1~12
 
   function mulberry32(a) {
@@ -425,7 +429,7 @@
   }
 
   return {
-    MONTH_NAMES, DEFAULT_RULES, monthOf, mulberry32, handTotal, sumMonths, findJokbo, findWin, claimKind,
+    MONTH_NAMES, DEFAULT_RULES, RULES_VERSION, monthOf, mulberry32, handTotal, sumMonths, findJokbo, findWin, claimKind,
     createGame, legalActions, apply, actorOf, canStop, viewFor, standings,
   };
 });

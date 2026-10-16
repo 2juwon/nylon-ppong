@@ -44,7 +44,7 @@ export class Rank extends DurableObject {
     r.n += 1;
     await this.ctx.storage.put(rk, r);
     const seed = rand32() || 1;
-    return { ticket: await this.newTicket({ kind: 'solo', seed }), seed };
+    return { ticket: await this.newTicket({ kind: 'solo', seed, rv: NP.RULES_VERSION }), seed, rv: NP.RULES_VERSION };
   }
   // 사람들과: 방이 1등에게 줌
   async onlineTicket({ score, rounds, n }) {
@@ -61,9 +61,13 @@ export class Rank extends DurableObject {
     if (t.kind === 'solo') {
       const cpu = body.cpu | 0;
       rounds = body.rounds | 0;
+      // 게임 화면이 예전 버전이면 서버가 다시 둔 결과가 달라질 수 있음 → 받지 않음
+      if (body.rv !== NP.RULES_VERSION || t.rv !== NP.RULES_VERSION) return { error: '게임이 새 버전으로 바뀌어서 이 판은 확인할 수 없어요. 새로고침한 뒤 새 게임부터 올릴 수 있어요', stale: true };
       const r = NPReplay.replay({ seed: t.seed, cpu, rounds }, body.log);
-      if (!r.ok) return { error: r.error };
+      if (!r.ok) { await this.report('다시 두기 실패: ' + r.error, t, body, null); return { error: '기록을 확인하지 못했어요. 고장 신고로 자동 접수했어요' }; }
       if (r.score == null) return { error: '1등 한 게임만 올릴 수 있어요' };
+      // 화면에서 본 점수와 서버가 다시 둔 점수가 다르면 올리지 않음 (틀린 점수가 랭킹에 찍히지 않게)
+      if (body.score !== r.score) { await this.report('점수 불일치', t, body, r.myScore); return { error: '화면 점수와 서버 확인 점수가 달라서 올리지 않았어요. 고장 신고로 자동 접수했어요' }; }
       score = r.score; n = cpu + 1; mode = 'solo';
     } else {
       score = t.score; rounds = t.rounds; n = t.n; mode = 'online';
@@ -81,6 +85,18 @@ export class Rank extends DurableObject {
     await this.ctx.storage.put('b:' + key, b);
     return { ok: true, board: key, id: entry.id, place: place <= KEEP ? place : null, score, total: b.total };
   }
+  // 확인에 실패한 기록은 의견함에 고장 신고로 남김 (원인 찾기용: 씨앗·내 수·양쪽 점수)
+  async report(why, t, body, serverScore) {
+    try {
+      const inbox = this.env.INBOX.get(this.env.INBOX.idFromName('main'));
+      await inbox.add({
+        kind: 'bug',
+        text: `[자동] 랭킹 등록 확인 실패 — ${why} (화면 ${body.score}점 / 서버 ${serverScore == null ? '-' : serverScore + '점'})`,
+        context: { auto: 'rank', why, seed: t.seed, ticketRv: t.rv, rv: body.rv, serverRv: NP.RULES_VERSION, cpu: body.cpu, rounds: body.rounds, clientScore: body.score, serverScore, name: String(body.name || '').slice(0, 20), log: Array.isArray(body.log) ? body.log.slice(0, 4000) : null },
+      }, 'rank-auto');
+    } catch (e) { console.error('report', e); }
+  }
+
   async board(key) {
     const b = (await this.ctx.storage.get('b:' + key)) || { list: [], total: 0 };
     return { board: key, list: b.list, total: b.total };

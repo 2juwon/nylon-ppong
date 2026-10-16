@@ -2085,6 +2085,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
   const MINE_KEY = 'nylonppong.myranks';    // 내가 올린 기록 id (랭킹에서 내 줄 표시)
   const isDefaultRules = (r) => !!r && Object.keys(NP.DEFAULT_RULES).every((k) => r[k] === NP.DEFAULT_RULES[k]);
   // 혼자 하기 시작할 때 서버에서 씨앗을 받아 둠. 서버가 늦거나 지역 규칙을 바꾸면 랭킹 없이 그냥 시작
+  let staleBuild = false;
   async function rankTicket() {
     if (!SERVER || !isDefaultRules(S.rules) || S.cpu !== 3) return null; // 랭킹은 4명(컴퓨터 3명)일 때만
     try {
@@ -2093,6 +2094,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
       const r = await fetch(SERVER + '/api/rank/ticket', { method: 'POST', signal: ctl ? ctl.signal : undefined });
       clearTimeout(timer);
       const j = await r.json();
+      if (j && j.ticket && j.rv !== NP.RULES_VERSION) { staleBuild = true; return null; } // 서버가 더 새 버전 → 이 화면으론 랭킹 못 올림
       return j && j.ticket && j.seed ? { ticket: j.ticket, seed: j.seed >>> 0 } : null;
     } catch (e) { return null; }
   }
@@ -2115,6 +2117,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
     if (G.players.length !== 4) return '랭킹은 4명이서 한 게임만 올라가요.';
     if (G.rules.battle) return '전투모드 게임은 아직 랭킹에 올릴 수 없어요.';
     if (!isDefaultRules(G.rules)) return '지역 규칙을 바꾼 게임은 랭킹에 올릴 수 없어요.';
+    if (!online && !G.rank && staleBuild) return '게임이 새 버전으로 바뀌었어요. 새로고침하면 다음 게임부터 랭킹에 올릴 수 있어요.';
     if (!online && !G.rank) return '서버에 연결되지 않은 채 시작한 게임이라 랭킹에 올릴 수 없어요.';
     return '';
   }
@@ -2146,7 +2149,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
       send.disabled = true;
       try {
         const body = { ticket: rec.ticket, name };
-        if (rec.mode === 'solo') Object.assign(body, { cpu: rec.cpu, rounds: rec.rounds, log: rec.log });
+        if (rec.mode === 'solo') Object.assign(body, { cpu: rec.cpu, rounds: rec.rounds, log: rec.log, score: rec.score, rv: NP.RULES_VERSION });
         const r = await fetch(SERVER + '/api/rank/submit', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
         const j = await r.json().catch(() => ({}));
         if (!r.ok || !j.ok) throw new Error(j.error || '등록하지 못했어요');
