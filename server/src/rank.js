@@ -8,6 +8,9 @@ import NP from '../../src/engine.js';
 import NPReplay from '../../src/replay.js';
 
 const KEEP = 100;
+// 예전 규칙 버전들 (버전 정보 없이 올라오는 예전 화면의 판을 확인할 때 같이 다시 둬 봄)
+// 1: 4-2 자연바가지 없음 (2026-10-15 19:52 이전)
+const LEGACY_RULES = [{ jayeon42: false }];
 const TICKET_TTL = 3 * 24 * 3600 * 1000;
 const TICKETS_PER_HOUR = 60;
 export const BOARDS = [3, 5, 10].map((r) => `${r}-4`); // 랭킹은 4명이서 한 게임만
@@ -61,14 +64,19 @@ export class Rank extends DurableObject {
     if (t.kind === 'solo') {
       const cpu = body.cpu | 0;
       rounds = body.rounds | 0;
-      // 게임 화면이 예전 버전이면 서버가 다시 둔 결과가 달라질 수 있음 → 받지 않음
-      if (body.rv !== NP.RULES_VERSION || t.rv !== NP.RULES_VERSION) return { error: '게임이 새 버전으로 바뀌어서 이 판은 확인할 수 없어요. 새로고침한 뒤 새 게임부터 올릴 수 있어요', stale: true };
-      const r = NPReplay.replay({ seed: t.seed, cpu, rounds }, body.log);
-      if (!r.ok) { await this.report('다시 두기 실패: ' + r.error, t, body, null); return { error: '기록을 확인하지 못했어요. 고장 신고로 자동 접수했어요' }; }
-      if (r.score == null) return { error: '1등 한 게임만 올릴 수 있어요' };
-      // 화면에서 본 점수와 서버가 다시 둔 점수가 다르면 올리지 않음 (틀린 점수가 랭킹에 찍히지 않게)
-      if (body.score !== r.score) { await this.report('점수 불일치', t, body, r.myScore); return { error: '화면 점수와 서버 확인 점수가 달라서 올리지 않았어요. 고장 신고로 자동 접수했어요' }; }
-      score = r.score; n = cpu + 1; mode = 'solo';
+      if (body.rv !== undefined && body.rv !== NP.RULES_VERSION) return { error: '게임이 새 버전으로 바뀌어서 이 판은 확인할 수 없어요. 새로고침한 뒤 새 게임부터 올릴 수 있어요', stale: true };
+      // 같은 버전이면 지금 규칙으로만, 예전 화면(버전 정보 없음)이면 예전 규칙들로도 다시 둬 봄.
+      // 다시 둔 결과가 하나뿐이거나 모두 같은 점수일 때만 믿을 수 있음 (서로 다르면 어떤 화면이었는지 알 수 없음)
+      const current = body.rv === NP.RULES_VERSION && t.rv === NP.RULES_VERSION;
+      const variants = current ? [{}] : [{}].concat(LEGACY_RULES);
+      const ok = variants.map((rules) => NPReplay.replay({ seed: t.seed, cpu, rounds, rules }, body.log)).filter((r) => r.ok);
+      if (!ok.length) { await this.report('다시 두기 실패', t, body, null); return { error: '기록을 확인하지 못했어요. 고장 신고로 자동 접수했어요' }; }
+      const outcomes = [...new Set(ok.map((r) => (r.score == null ? 'x' : r.score)))];
+      if (outcomes.length > 1) { await this.report('규칙 버전에 따라 결과가 갈림 ' + outcomes.join('/'), t, body, null); return { error: '게임 도중 규칙이 바뀌어서 이 판은 점수를 확인할 수 없어요. 새로고침한 뒤 새 게임부터 올릴 수 있어요', stale: true }; }
+      if (outcomes[0] === 'x') return { error: '1등 한 게임만 올릴 수 있어요' };
+      // 화면에서 본 점수를 보냈으면 서버가 다시 둔 점수와 같아야 함 (틀린 점수가 랭킹에 찍히지 않게)
+      if (body.score !== undefined && body.score !== outcomes[0]) { await this.report('점수 불일치', t, body, ok[0].myScore); return { error: '화면 점수와 서버 확인 점수가 달라서 올리지 않았어요. 고장 신고로 자동 접수했어요' }; }
+      score = outcomes[0]; n = cpu + 1; mode = 'solo';
     } else {
       score = t.score; rounds = t.rounds; n = t.n; mode = 'online';
     }

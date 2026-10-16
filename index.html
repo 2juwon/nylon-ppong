@@ -1459,7 +1459,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
   let sheetKind = null;  // 지금 열린 시트 종류
   let startMode = 'online';
   const recent = [];     // 최근 진행 기록 (고장 신고에 같이 보냄)
-  const BUILD = '2026-10-16T00:52';
+  const BUILD = '2026-10-16T03:44';
 
   const T = (ms) => (reduceMotion ? 0 : Math.round(ms * (S.speed === 'fast' ? 0.5 : 1)));
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -2829,7 +2829,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
       } catch (e) {
         recordUI.key = rec.ticket; recordUI.name = input.value;
         recordUI.msg = e.message && /[가-힣]/.test(e.message) ? e.message : '등록하지 못했어요. 잠시 뒤에 다시 해 주세요';
-        if (/이미 등록|오래된/.test(recordUI.msg)) saveJSON(RECORD_KEY, null);
+        if (/이미 등록|오래된|새로고침/.test(recordUI.msg)) saveJSON(RECORD_KEY, null); // 다시 눌러도 안 되는 기록은 남겨 두지 않음
       }
       after();
     };
@@ -2980,6 +2980,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
     shownFor = null;
     const tk = await rankTicket();
     if (gen !== g0) return;
+    if (staleBuild) say('새 버전이 나왔어요. 새로고침하면 랭킹에 올릴 수 있어요');
     G = makeGame(tk ? tk.seed : randomSeed());
     G.rank = tk ? { ticket: tk.ticket, log: [] } : null;
     saveStore();

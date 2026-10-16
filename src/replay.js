@@ -25,7 +25,7 @@
     return players;
   }
   function soloGame(cfg) {
-    return NP.createGame({ players: soloPlayers(cfg.cpu), rounds: cfg.rounds, rules: NP.DEFAULT_RULES, seed: cfg.seed, firstDealer: 0 });
+    return NP.createGame({ players: soloPlayers(cfg.cpu), rounds: cfg.rounds, rules: Object.assign({}, NP.DEFAULT_RULES, cfg.rules || {}), seed: cfg.seed, firstDealer: 0 });
   }
   // 성공하면 { ok, state, score, rank }, 아니면 { error }
   function replay(cfg, log) {
