@@ -216,14 +216,14 @@ button { font: inherit; color: inherit; }
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.42), 0 3px 6px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.5);
   overflow: hidden;
 }
-.card svg { position: absolute; left: 8%; top: 6%; width: 84%; height: 88%; overflow: hidden; border-radius: calc(var(--w) * 0.04); }
+.card svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .card .n {
-  position: absolute; left: 5%; top: 3.5%;
-  min-width: calc(var(--w) * 0.34); height: calc(var(--w) * 0.34);
+  position: absolute; left: 7%; top: 4.5%;
+  min-width: calc(var(--w) * 0.3); height: calc(var(--w) * 0.3);
   padding: 0 calc(var(--w) * 0.05);
   display: grid; place-items: center;
   background: var(--ink); color: var(--hanji);
-  font: calc(var(--w) * 0.24)/1 var(--font-display);
+  font: calc(var(--w) * 0.21)/1 var(--font-display);
   border-radius: calc(var(--w) * 0.07);
   box-shadow: 0 0 0 calc(var(--w) * 0.025) var(--hanji);
   font-variant-numeric: tabular-nums;
@@ -478,6 +478,7 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
 </script>
 <script>
 /*__AI__*/
+/*__HWATU__*/
 </script>
 <script>
 (() => {
@@ -503,179 +504,9 @@ textarea.text-input { min-height: 120px; padding: 10px 12px; line-height: 1.5; r
   const DEFAULTS = { cpu: 3, rounds: 5, speed: 'normal', rules: Object.assign({ rv: 2 }, NP.DEFAULT_RULES) };
 
   /* ───────── 화투패 그림 (12달) ───────── */
-  const C = {
-    ink: '#1c1913', red: '#c8321e', pine: '#205c40', pineD: '#123b29', brown: '#4b3424', pink: '#e8879d', pinkL: '#f5c4cf',
-    violet: '#5b4aa3', yel: '#e5b33c', orange: '#c8791f', leaf: '#3f7b3a', leafD: '#2a5a2b', maple: '#d33c22', mapleD: '#a92d1a',
-    moon: '#f8f1dd', sky: '#b8301d', blue: '#2f4f8d', willow: '#2e4b2c', rain: '#3e4e6e', crimson: '#a8233a',
-  };
-  const fx2 = (n) => Math.round(n * 100) / 100;
-  const rad = (d) => (d * Math.PI) / 180;
-  function sector(cx, cy, r, a0, a1, fill, ribs, ribColor) {
-    const p = (a, rr) => [fx2(cx + rr * Math.cos(rad(a))), fx2(cy - rr * Math.sin(rad(a)))];
-    const [x0, y0] = p(a0, r), [x1, y1] = p(a1, r);
-    let s = `<path d="M${cx} ${cy}L${x0} ${y0}A${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 0 ${x1} ${y1}Z" fill="${fill}"/>`;
-    if (ribs) {
-      let d = '';
-      for (let i = 1; i < ribs; i++) { const [x, y] = p(a0 + ((a1 - a0) * i) / ribs, r * 0.97); d += `M${cx} ${cy}L${x} ${y}`; }
-      s += `<path d="${d}" stroke="${ribColor}" stroke-width="0.55" fill="none"/>`;
-    }
-    return s;
-  }
-  function blossom(cx, cy, r, petal, center, rot = 0) {
-    let s = '';
-    for (let i = 0; i < 5; i++) {
-      const a = rad(rot + i * 72);
-      s += `<circle cx="${fx2(cx + r * 0.55 * Math.cos(a))}" cy="${fx2(cy + r * 0.55 * Math.sin(a))}" r="${fx2(r * 0.5)}" fill="${petal}"/>`;
-    }
-    return s + `<circle cx="${cx}" cy="${cy}" r="${fx2(r * 0.26)}" fill="${center}"/>`;
-  }
-  function leaf(x, y, L, W, deg, fill, vein) {
-    return `<g transform="translate(${fx2(x)} ${fx2(y)}) rotate(${fx2(deg)})"><path d="M0 0Q${fx2(L * 0.5)} ${fx2(-W)} ${fx2(L)} 0Q${fx2(L * 0.5)} ${fx2(W)} 0 0Z" fill="${fill}"/>${vein ? `<path d="M0 0L${fx2(L * 0.9)} 0" stroke="${vein}" stroke-width="0.5"/>` : ''}</g>`;
-  }
-  function strand(x0, y0, cx, cy, x1, y1, n, fill, stem, L) {
-    let s = `<path d="M${x0} ${y0}Q${cx} ${cy} ${x1} ${y1}" stroke="${stem}" stroke-width="0.9" fill="none"/>`;
-    for (let i = 1; i <= n; i++) {
-      const t = i / (n + 0.6);
-      const x = (1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * cx + t * t * x1;
-      const y = (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * cy + t * t * y1;
-      const dx = 2 * (1 - t) * (cx - x0) + 2 * t * (x1 - cx), dy = 2 * (1 - t) * (cy - y0) + 2 * t * (y1 - cy);
-      const ang = (Math.atan2(dy, dx) * 180) / Math.PI;
-      s += leaf(x, y, L, L * 0.36, ang + 38, fill) + leaf(x, y, L, L * 0.36, ang - 38, fill);
-    }
-    return s + leaf(x1, y1, L * 0.9, L * 0.34, (Math.atan2(y1 - cy, x1 - cx) * 180) / Math.PI, fill);
-  }
-  function maple(cx, cy, r, fill, rot = 0) {
-    const pts = [];
-    for (let i = 0; i < 14; i++) {
-      const a = rad(rot - 90 + (i * 180) / 7);
-      const rr = i % 2 ? r * 0.44 : r;
-      pts.push(`${fx2(cx + rr * Math.cos(a))},${fx2(cy + rr * Math.sin(a))}`);
-    }
-    return `<polygon points="${pts.join(' ')}" fill="${fill}" stroke="${fill}" stroke-width="0.8" stroke-linejoin="round"/><path d="M${cx} ${cy}l${fx2(Math.sin(rad(rot)) * -r * 1.15)} ${fx2(Math.cos(rad(rot)) * r * 1.15)}" stroke="${C.ink}" stroke-width="0.6"/>`;
-  }
-  function chrys(cx, cy, r, fill, inner, center, n) {
-    let s = '';
-    for (let i = 0; i < n; i++) s += `<ellipse cx="${cx}" cy="${fx2(cy - r * 0.56)}" rx="${fx2(r * 0.15)}" ry="${fx2(r * 0.46)}" fill="${fill}" transform="rotate(${fx2((i * 360) / n)} ${cx} ${cy})"/>`;
-    for (let i = 0; i < n; i++) s += `<ellipse cx="${cx}" cy="${fx2(cy - r * 0.3)}" rx="${fx2(r * 0.12)}" ry="${fx2(r * 0.28)}" fill="${inner}" transform="rotate(${fx2((i * 360) / n + 180 / n)} ${cx} ${cy})"/>`;
-    return s + `<circle cx="${cx}" cy="${cy}" r="${fx2(r * 0.2)}" fill="${center}"/>`;
-  }
-  function peony(cx, cy, r) {
-    let s = '';
-    for (let i = 0; i < 9; i++) { const a = rad(i * 40); s += `<circle cx="${fx2(cx + r * 0.62 * Math.cos(a))}" cy="${fx2(cy + r * 0.62 * Math.sin(a))}" r="${fx2(r * 0.42)}" fill="${C.red}"/>`; }
-    for (let i = 0; i < 6; i++) { const a = rad(i * 60 + 20); s += `<circle cx="${fx2(cx + r * 0.3 * Math.cos(a))}" cy="${fx2(cy + r * 0.3 * Math.sin(a))}" r="${fx2(r * 0.3)}" fill="#e2634e"/>`; }
-    return s + `<circle cx="${cx}" cy="${cy}" r="${fx2(r * 0.15)}" fill="${C.yel}"/>`;
-  }
-  function iris(cx, cy, s) {
-    return `<ellipse cx="${cx}" cy="${fx2(cy - s * 0.5)}" rx="${fx2(s * 0.24)}" ry="${fx2(s * 0.52)}" fill="${C.violet}"/>` +
-      `<ellipse cx="${fx2(cx - s * 0.42)}" cy="${fx2(cy + s * 0.12)}" rx="${fx2(s * 0.22)}" ry="${fx2(s * 0.5)}" fill="${C.violet}" transform="rotate(52 ${fx2(cx - s * 0.42)} ${fx2(cy + s * 0.12)})"/>` +
-      `<ellipse cx="${fx2(cx + s * 0.42)}" cy="${fx2(cy + s * 0.12)}" rx="${fx2(s * 0.22)}" ry="${fx2(s * 0.5)}" fill="${C.violet}" transform="rotate(-52 ${fx2(cx + s * 0.42)} ${fx2(cy + s * 0.12)})"/>` +
-      `<circle cx="${cx}" cy="${fx2(cy + s * 0.05)}" r="${fx2(s * 0.13)}" fill="${C.yel}"/>`;
-  }
-  function heartLeaf(cx, cy, r, rot, fill) {
-    return `<g transform="translate(${cx} ${cy}) rotate(${rot})"><path d="M0 ${fx2(r)}C${fx2(-r * 1.25)} ${fx2(r * 0.15)} ${fx2(-r * 0.95)} ${fx2(-r)} 0 ${fx2(-r * 0.42)}C${fx2(r * 0.95)} ${fx2(-r)} ${fx2(r * 1.25)} ${fx2(r * 0.15)} 0 ${fx2(r)}Z" fill="${fill}"/><path d="M0 ${fx2(-r * 0.38)}L0 ${fx2(r * 0.9)}M0 ${fx2(r * 0.1)}L${fx2(-r * 0.5)} ${fx2(-r * 0.25)}M0 ${fx2(r * 0.1)}L${fx2(r * 0.5)} ${fx2(-r * 0.25)}" stroke="#4a4a35" stroke-width="0.6" fill="none"/></g>`;
-  }
-  function willow(x, len, sway, color) {
-    let s = `<path d="M${x} -2Q${fx2(x + sway)} ${fx2(len * 0.5)} ${fx2(x + sway * 0.6)} ${len}" stroke="${color}" stroke-width="1" fill="none"/>`;
-    for (let y = 6; y < len; y += 5.5) {
-      const t = y / len;
-      const px = (1 - t) * (1 - t) * x + 2 * (1 - t) * t * (x + sway) + t * t * (x + sway * 0.6);
-      s += `<ellipse cx="${fx2(px + 1.6)}" cy="${y}" rx="0.9" ry="2.4" fill="${color}" transform="rotate(-24 ${fx2(px + 1.6)} ${y})"/><ellipse cx="${fx2(px - 1.6)}" cy="${y + 2}" rx="0.9" ry="2.4" fill="${color}" transform="rotate(24 ${fx2(px - 1.6)} ${y + 2})"/>`;
-    }
-    return s;
-  }
-
-  const ART = {
-    1: `<circle cx="34" cy="18" r="10.5" fill="${C.red}"/>` +
-      // 아래쪽 검은 산 (송학 네 장 공통)
-      `<path d="M-5 85L-5 63C1 59 6 55 12 56C18 57 21 64 27 64C33 64 37 56 43 55C48 54 52 57 55 59L55 85Z" fill="${C.ink}"/>` +
-      `<path d="M3 70q4-4 8-4M18 74q4-4 9-4M35 68q4-4 8-4M8 79q4-3 8-3M40 77q4-3 8-3" stroke="${C.moon}" stroke-width="0.7" fill="none" opacity="0.55"/>` +
-      `<path d="M9 80C11 67 14 57 20 47S28 35 31 31" stroke="${C.brown}" stroke-width="2.6" fill="none" stroke-linecap="round"/>` +
-      sector(31, 41, 11, 15, 165, C.pine, 9, C.pineD) + sector(12, 55, 13, 15, 165, C.pine, 10, C.pineD) +
-      sector(36, 66, 13, 15, 165, C.pine, 10, C.pineD) + sector(11, 77, 10, 15, 165, C.pine, 8, C.pineD),
-    2: `<path d="M3 78C10 64 14 58 20 50C26 42 30 36 34 26C37 18 40 12 46 5" stroke="${C.ink}" stroke-width="2.6" fill="none" stroke-linecap="round"/>` +
-      `<path d="M20 50C27 52 33 50 40 44M30 35C24 31 20 26 18 18M13 61C8 57 6 51 5 45" stroke="${C.ink}" stroke-width="1.5" fill="none" stroke-linecap="round"/>` +
-      blossom(40, 44, 7, C.red, C.yel, 10) + blossom(18, 18, 6.5, C.red, C.yel, 30) + blossom(5, 45, 5.5, C.red, C.yel, 0) +
-      blossom(34, 26, 6, C.red, C.yel, 50) + blossom(26, 48, 5, C.red, C.yel, 20) + blossom(45, 7, 5, C.red, C.yel, 40) + blossom(12, 62, 5.5, C.red, C.yel, 15),
-    3: `<path d="M0 54C10 48 18 44 28 42C37 40 44 33 50 26" stroke="${C.ink}" stroke-width="2" fill="none"/>` +
-      [[9, 12, 7, 1], [22, 8, 6.5, 0], [35, 12, 7, 1], [46, 20, 6, 0], [14, 25, 6.5, 0], [27, 22, 7, 1], [40, 31, 6.5, 1], [6, 37, 6, 1], [19, 37, 6.5, 0], [31, 45, 6, 0], [10, 50, 5, 1], [45, 43, 5, 0]]
-        .map(([x, y, r, k], i) => blossom(x, y, r, k ? C.pink : C.pinkL, k ? '#fff4f6' : C.pink, i * 23)).join('') +
-      `<ellipse cx="24" cy="62" rx="1.6" ry="1" fill="${C.pink}"/><ellipse cx="36" cy="68" rx="1.6" ry="1" fill="${C.pink}"/><ellipse cx="14" cy="72" rx="1.6" ry="1" fill="${C.pinkL}"/>`,
-    4: strand(8, -2, 6, 30, 11, 60, 7, C.ink, C.ink, 6) + strand(20, -2, 25, 36, 18, 74, 8, C.ink, C.ink, 6.5) +
-      strand(32, -2, 28, 28, 34, 58, 6, C.ink, C.ink, 6) + strand(43, -2, 48, 34, 42, 70, 8, C.ink, C.ink, 6) +
-      `<circle cx="14" cy="66" r="1.4" fill="${C.red}"/><circle cx="23" cy="77" r="1.4" fill="${C.red}"/><circle cx="37" cy="62" r="1.4" fill="${C.red}"/><circle cx="45" cy="74" r="1.4" fill="${C.red}"/>`,
-    5: `<g stroke="${C.leaf}" stroke-width="2.3" fill="none" stroke-linecap="round"><path d="M8 82Q10 56 4 30"/><path d="M15 82Q16 52 20 22"/><path d="M24 82Q22 60 14 44"/><path d="M31 82Q32 58 38 34"/><path d="M40 82Q42 64 47 46"/><path d="M45 82Q40 66 30 56"/></g>` +
-      iris(19, 26, 13) + iris(37, 38, 12) + iris(12, 50, 9.5),
-    6: leaf(25, 58, 22, 6, 120, C.leafD, '#16341a') + leaf(25, 58, 20, 6, 60, C.leafD, '#16341a') + leaf(25, 58, 18, 5, 95, C.leaf, '#16341a') +
-      leaf(25, 52, 17, 5.5, 165, C.leaf, '#16341a') + leaf(25, 52, 17, 5.5, 15, C.leaf, '#16341a') +
-      peony(25, 32, 15) + peony(40, 66, 7),
-    7: strand(-2, 4, 26, -4, 44, 40, 7, C.crimson, C.ink, 6) + strand(4, 22, 30, 18, 38, 66, 7, C.red, C.ink, 6) +
-      strand(-2, 42, 18, 40, 22, 78, 5, C.crimson, C.ink, 5.5) +
-      `<circle cx="44" cy="12" r="2" fill="${C.pinkL}"/><circle cx="47" cy="17" r="1.6" fill="${C.pink}"/><circle cx="8" cy="64" r="1.8" fill="${C.pink}"/>`,
-    8: '<use href="#m8sky"/><use href="#m8hill"/>',
-    9: `<path d="M26 80Q26 60 26 40M13 80Q13 70 12 60" stroke="${C.leafD}" stroke-width="1.6" fill="none"/>` +
-      leaf(26, 66, 13, 5, -150, C.leaf, '#1f4a20') + leaf(26, 60, 13, 5, -30, C.leaf, '#1f4a20') + leaf(13, 74, 11, 4, -150, C.leaf, '#1f4a20') + leaf(26, 52, 12, 4.5, -40, C.leafD, '#1f4a20') +
-      chrys(26, 28, 14, C.yel, '#f0cb5e', C.orange, 18) + chrys(12, 56, 8.5, C.yel, '#f0cb5e', C.orange, 14),
-    10: `<path d="M2 76Q14 54 22 42T46 4M22 42Q32 44 40 54M16 54Q8 50 4 40" stroke="${C.ink}" stroke-width="1.2" fill="none"/>` +
-      maple(16, 17, 10, C.maple, -8) + maple(36, 26, 11, C.maple, 12) + maple(9, 40, 8.5, C.mapleD, -18) + maple(40, 54, 10, C.maple, 6) +
-      maple(22, 62, 9, C.mapleD, 18) + maple(39, 74, 7, C.maple, -6),
-    11: `<path d="M24 46L24 6" stroke="#6b4b2a" stroke-width="1.4"/>` +
-      [8, 13, 18, 23, 28, 33, 38].map((y, i) => `<circle cx="${i % 2 ? 21 : 27}" cy="${y}" r="3.2" fill="${i % 3 ? C.yel : '#d68a2a'}"/>`).join('') +
-      heartLeaf(13, 60, 12, 18, C.ink) + heartLeaf(37, 58, 13, -16, C.ink) + heartLeaf(25, 70, 12, 0, '#24221b'),
-    12: willow(6, 74, 6, C.willow) + willow(16, 60, -5, C.willow) + willow(28, 70, 6, C.willow) + willow(40, 56, -4, C.willow) + willow(48, 72, 4, C.willow) +
-      `<path d="M10 22l-3 8M22 14l-3 8M34 26l-3 8M44 10l-3 8M14 46l-3 8M30 52l-3 8M42 40l-3 8M20 66l-3 8M38 70l-3 8" stroke="${C.rain}" stroke-width="0.7" opacity="0.75"/>`,
-  };
-  const EXTRA = {
-    m8sky: `<rect x="-5" y="-5" width="60" height="60" fill="${C.sky}"/>`,
-    m8hill: `<path d="M-5 85L-5 42C6 32 18 29 28 35C37 40 45 35 55 30L55 85Z" fill="${C.ink}"/>` +
-      `<path d="M7 52q2-6 6-9M15 60q3-7 7-10M25 54q2-6 6-8M33 64q3-7 7-9M42 52q2-5 6-7M10 70q3-6 7-9M28 74q3-6 7-8M44 72q2-5 5-7" stroke="${C.moon}" stroke-width="0.8" fill="none" opacity="0.85"/>`,
-    g1: `<ellipse cx="22" cy="61" rx="10" ry="5.2" fill="${C.moon}" stroke="${C.ink}" stroke-width="0.6"/><path d="M12 61l-5 3 6 1z" fill="${C.ink}"/>` +
-      `<path d="M30 58Q33 52 33 44" stroke="${C.ink}" stroke-width="3.2" fill="none" stroke-linecap="round"/><path d="M30 58Q33 52 33 44" stroke="${C.moon}" stroke-width="2" fill="none" stroke-linecap="round"/>` +
-      `<circle cx="33.5" cy="43" r="2.2" fill="${C.moon}" stroke="${C.ink}" stroke-width="0.5"/><circle cx="33.4" cy="41.6" r="1" fill="${C.red}"/><path d="M35.4 43.4l4.4 1.2" stroke="${C.ink}" stroke-width="0.9"/>` +
-      `<path d="M20 66v10M25 66v10" stroke="${C.moon}" stroke-width="0.9"/>`,
-    g3: `<rect x="-2" y="56" width="54" height="30" fill="${C.red}"/>` +
-      `<path d="M-2 56q4.5 6 9 0q4.5 6 9 0q4.5 6 9 0q4.5 6 9 0q4.5 6 9 0q4.5 6 9 0v-3h-54z" fill="${C.moon}"/>` +
-      `<path d="M-2 66h54M-2 74h54" stroke="${C.moon}" stroke-width="1.2"/><circle cx="12" cy="70" r="2.4" fill="${C.moon}"/><circle cx="38" cy="70" r="2.4" fill="${C.moon}"/>`,
-    g8: `<circle cx="25" cy="19" r="12.5" fill="${C.moon}"/><use href="#m8hill"/>`,
-    g12: `<path d="M8 42A17 12 0 0 1 42 42Z" fill="${C.red}" stroke="${C.ink}" stroke-width="0.6"/><path d="M25 30L13 42M25 30L25 42M25 30L37 42" stroke="${C.mapleD}" stroke-width="0.6"/><path d="M25 42v20q0 3 -3 3" stroke="${C.ink}" stroke-width="1.4" fill="none"/>`,
-    y2: `<ellipse cx="34" cy="63" rx="6.5" ry="4" fill="#9fae3c" transform="rotate(-18 34 63)"/><circle cx="40" cy="59" r="2.7" fill="#9fae3c"/><path d="M42.4 58.6l2.8 0.2-2.6 1.2" fill="${C.ink}"/><circle cx="40.6" cy="58.4" r="0.6" fill="${C.ink}"/><path d="M28 66l-6 3" stroke="#6f7a2a" stroke-width="2"/>`,
-    y5: `<path d="M-2 70l14-6 14 6 14-6 14 6v5l-14-6-14 6-14-6-14 6z" fill="#7a5a34" stroke="${C.ink}" stroke-width="0.5"/>`,
-    y6: `<g transform="translate(37 64)"><path d="M0 0C-6 -8 -10 -2 -7 3C-5 6 -2 4 0 0C2 4 5 6 7 3C10 -2 6 -8 0 0Z" fill="${C.yel}" stroke="${C.ink}" stroke-width="0.6"/><path d="M0 -1v6" stroke="${C.ink}" stroke-width="1"/><circle cx="-5" cy="0" r="1.2" fill="${C.blue}"/><circle cx="5" cy="0" r="1.2" fill="${C.blue}"/></g>`,
-    y8: `<path d="M10 14l3 2.2 3-2.2M20 9l3 2.2 3-2.2M30 15l3 2.2 3-2.2" stroke="${C.ink}" stroke-width="1.3" fill="none" stroke-linecap="round"/>`,
-    y9: `<path d="M33 68h12l-2 7h-8z" fill="${C.red}" stroke="${C.ink}" stroke-width="0.6"/><ellipse cx="39" cy="68" rx="6" ry="1.6" fill="#e05a42" stroke="${C.ink}" stroke-width="0.5"/><circle cx="39" cy="71.4" r="1.6" fill="${C.yel}"/>`,
-    y12: `<path d="M14 30q8 -6 12 2q4 -8 12 -2q-6 0 -12 8q-6 -8 -12 -8z" fill="${C.ink}"/><path d="M26 36l-3 8M26 36l3 8" stroke="${C.ink}" stroke-width="1"/>`,
-    s12: `<rect x="9" y="56" width="32" height="20" rx="3" fill="${C.red}" stroke="${C.ink}" stroke-width="0.6"/><path d="M13 56v20M19 56v20M25 56v20M31 56v20M37 56v20" stroke="${C.ink}" stroke-width="1.8"/>`,
-    s11: `<circle cx="40" cy="12" r="5" fill="${C.red}" opacity="0.9"/><circle cx="40" cy="12" r="2.4" fill="${C.yel}"/>`,
-    rh: `<g transform="rotate(-24 25 50)"><rect x="9" y="45" width="32" height="9" rx="1" fill="${C.red}" stroke="${C.ink}" stroke-width="0.6"/><path d="M15 47.4v4.2M19.5 47.4v2.6M24 47.4v4.2M28.5 47.4v4.2M33 47.4v2.6" stroke="${C.ink}" stroke-width="1"/></g>`,
-    rc: `<g transform="rotate(-24 25 50)"><rect x="9" y="45" width="32" height="9" rx="1" fill="${C.blue}" stroke="${C.ink}" stroke-width="0.6"/><path d="M15 47.4v4.2M19.5 47.4v2.6M24 47.4v4.2M28.5 47.4v4.2M33 47.4v2.6" stroke="${C.moon}" stroke-width="1"/></g>`,
-    rch: `<g transform="rotate(-24 25 50)"><rect x="9" y="45" width="32" height="9" rx="1" fill="${C.red}" stroke="${C.ink}" stroke-width="0.6"/></g>`,
-    rt: `<g transform="rotate(-24 25 50)"><rect x="9" y="45" width="32" height="9" rx="1" fill="${C.red}" stroke="${C.ink}" stroke-width="0.6"/><path d="M14 45l-4 9M22 45l-4 9M30 45l-4 9M38 45l-4 9" stroke="${C.moon}" stroke-width="1.6"/></g>`,
-    gw: `<circle cx="41.5" cy="8.5" r="6.2" fill="${C.red}" stroke="${C.moon}" stroke-width="1.1"/><text x="41.5" y="11.4" font-size="8.4" text-anchor="middle" fill="${C.moon}" font-weight="700" font-family="'Noto Serif CJK KR','Noto Serif KR','Apple SD Gothic Neo','Batang',serif">光</text>`,
-  };
-  // 각 월 네 장의 모양새 (게임 점수와는 상관없이 보기 좋으라고 넣은 것)
-  const TYPES = {
-    1: ['gwang', 'hong', 'pi', 'pi'], 2: ['yeol', 'hong', 'pi', 'pi'], 3: ['gwang', 'hong', 'pi', 'pi'],
-    4: ['yeol', 'cho', 'pi', 'pi'], 5: ['yeol', 'cho', 'pi', 'pi'], 6: ['yeol', 'cheong', 'pi', 'pi'],
-    7: ['yeol', 'cho', 'pi', 'pi'], 8: ['gwang', 'yeol', 'pi', 'pi'], 9: ['yeol', 'cheong', 'pi', 'pi'],
-    10: ['yeol', 'cheong', 'pi', 'pi'], 11: ['gwang', 'pi', 'pi', 'ssang'], 12: ['gwang', 'yeol', 'tti', 'ssang'],
-  };
-  function buildSprite() {
-    let defs = '';
-    for (let m = 1; m <= 12; m++) defs += `<g id="m${m}">${ART[m]}</g>`;
-    for (const k in EXTRA) defs += `<g id="${k}">${EXTRA[k]}</g>`;
-    $('#sprite').innerHTML = `<defs>${defs}</defs>`;
-  }
-  function artFor(id) {
-    const m = M(id), type = TYPES[m][id & 3];
-    let s = `<use href="#m${m}"/>`;
-    if (type === 'gwang') s += (EXTRA['g' + m] ? `<use href="#g${m}"/>` : '') + '<use href="#gw"/>';
-    else if (type === 'yeol' && EXTRA['y' + m]) s += `<use href="#y${m}"/>`;
-    else if (type === 'hong') s += '<use href="#rh"/>';
-    else if (type === 'cheong') s += '<use href="#rc"/>';
-    else if (type === 'cho') s += '<use href="#rch"/>';
-    else if (type === 'tti') s += '<use href="#rt"/>';
-    else if (type === 'ssang' && EXTRA['s' + m]) s += `<use href="#s${m}"/>`;
-    return s;
-  }
+  /* ───────── 화투 그림 (src/hwatu.js) ───────── */
+  function buildSprite() { $('#sprite').innerHTML = `<defs>${HW.sprite()}</defs>`; }
+  const artFor = (id) => HW.use(id);
   const cardName = (id) => `${M(id)}월 ${MONTHS[M(id)]}`;
   function makeCard(id, tag = 'div', extra = '') {
     const c = el(tag, 'card face ' + extra);

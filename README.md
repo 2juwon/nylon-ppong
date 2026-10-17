@@ -46,7 +46,8 @@
 | `src/engine.js` | 규칙 엔진. 상태는 JSON이고 `apply(state, action)`으로만 바뀜. `viewFor(state, p)`는 p가 볼 수 있는 정보만 돌려줌 |
 | `src/ai.js` | 컴퓨터 플레이어. `viewFor`로 받은 정보만 사용 |
 | `src/replay.js` | 랭킹 기록 확인: 씨앗과 내가 둔 수로 혼자 하기 게임을 다시 둠 (서버·테스트에서 사용) |
-| `src/ui.html` | 화면, 화투 그림(직접 그린 SVG), 효과음, 온라인 방 화면 |
+| `src/ui.html` | 화면, 효과음, 온라인 방 화면 |
+| `src/hwatu.js` | 화투패 48장 그림 (전통 화투 구도를 따라 직접 그린 SVG, 장마다 다름) |
 | `server/` | 온라인 서버 (Cloudflare Workers + Durable Objects). 방마다 같은 엔진으로 판을 진행 |
 | `config.json` | 게임이 접속할 서버 주소 (`https://nylon-ppong.<서브도메인>.workers.dev`) |
 | `build.js` | `src`를 합쳐 `index.html`을 만듦 |

@@ -25,7 +25,8 @@ const merged = ui
   .replace('__SERVER_URL__', () => server)
   .replace('__BUILD_ID__', () => new Date().toISOString().slice(0, 16))
   .replace('/*__ENGINE__*/', () => read('src/engine.js').trim())
-  .replace('/*__AI__*/', () => read('src/ai.js').trim());
+  .replace('/*__AI__*/', () => read('src/ai.js').trim())
+  .replace('/*__HWATU__*/', () => read('src/hwatu.js').trim());
 
 // 인라인 스크립트 문법 확인
 const scripts = [...merged.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
