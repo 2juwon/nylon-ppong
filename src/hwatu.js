@@ -225,11 +225,16 @@
   ART[39] = maples([[30, 11, 8.4, 15], [44, 24, 7.6, 0], [22, 34, 9.4, -15], [42, 42, 8, 20], [8, 50, 8, 30], [28, 58, 9, 10], [12, 72, 8, -20], [40, 74, 8, 0]]);
   // 11월 오동
   const pflowers = (x, y, sp, up = 1) => [[-sp, -8 * up], [0, -11 * up], [sp, -7 * up]].map(([dx, dy], i) => branch(`M${x} ${y}Q${f(x + dx * 0.3)} ${f(y + dy * 0.6)} ${f(x + dx)} ${f(y + dy)}`, 0.8, GN2) + flower5(f(x + dx), f(y + dy), 3.4 - i * 0.2, BL, WH)).join('');
-  ART[40] = puff(16, 70, 12) + pflowers(36, 76, 6) +
-    `<g transform="translate(27 33)"><path d="M-14 22C-20 10 -16 -4 -4 -10C6 -15 18 -10 18 0C18 8 10 12 4 10C-4 8 -8 14 -8 22Z" fill="${RD}"/>` +
-    `<path d="M-6 -10C-8 -16 -6 -20 -2 -22C-2 -18 0 -15 2 -13M2 -12C2 -18 5 -21 9 -22C8 -18 8 -15 10 -12M9 -10C11 -15 15 -17 19 -16C16 -13 14 -10 14 -7" fill="${OR}"/>` +
-    `<circle cx="6" cy="-2" r="7.6" fill="${RD2}"/>` + eye(8, -3, 1.5) + cheek(10.8, 1.4, 1.1) + `<path d="M13 -1L19 1L13 3Z" fill="${YL}"/>` +
-    `<path d="M-12 8C-8 4 -4 4 0 6M-12 14C-8 10 -4 10 -1 12" stroke="${OR}" stroke-width="1.4" fill="none" stroke-linecap="round"/></g>` + gwang(42, 58);
+  // 광: 위에는 왼쪽을 보는 봉황 머리와 부채처럼 퍼지는 붉은 깃털, 아래는 검은 잎 덩어리 위 파란 꽃 (참고 이미지 구도)
+  ART[40] = [110, 135, 160, 185, 210].map((a, i) => { const x = 31 + Math.cos(rad(a)) * 14, y = 36 + Math.sin(rad(a)) * 14; return `<ellipse cx="${f(x)}" cy="${f(y)}" rx="3.4" ry="9" fill="${i % 2 ? OR : RD2}" transform="rotate(${a + 90} ${f(x)} ${f(y)})"/>`; }).join('') +
+    `<path d="M42 48C40 42 38 36 34 30" stroke="${RD}" stroke-width="7" fill="none" stroke-linecap="round"/>` +
+    `<path d="M33 12C32 7 34 4 37 3C37 6 38 8 40 9M38 10C39 6 42 4 46 4C44 7 43 9 43 12M42 14C44 12 46 12 47 14C45 15 44 17 43 19" fill="${OR}"/>` +
+    `<circle cx="33" cy="22" r="9.4" fill="${RD}"/><circle cx="34" cy="23" r="6" fill="${RD2}"/>` +
+    `<path d="M24.6 20L19 23.4L24.8 25.6Z" fill="${YL}"/><path d="M25.6 26C25 30 27 32 29 31C29 29 28 27 27 25.6Z" fill="${RD2}"/>` +
+    eye(29.4, 20.6, 1.4) + cheek(31.4, 25.4, 1.1) + `<path d="M36 28C38 30 41 30 43 28M37 31C39 33 42 33 44 31" stroke="${OR}" stroke-width="1" fill="none" stroke-linecap="round"/>` +
+    sprig(24, 56, 22, 48, 18, 40, 3, 4.2, [NV, NV2], NV) + sprig(28, 56, 30, 48, 32, 42, 3, 4, [NV2, NV], NV) +
+    puff(22, 68, 17) + puff(44, 70, 9) + flower5(25, 54, 5.2, BL, WH) +
+    `<rect x="0" y="76" width="50" height="8" fill="${YL}"/>` + gwang(40, 66);
   // 피·쌍피: 검은 잎 덩어리 윗가장자리에 파란 꽃이 바로 붙고, 그 위로 잎 달린 줄기가 올라감 (참고 이미지 구도)
   const stems = (list) => list.map(([x0, y0, cx, cy, x1, y1, n]) => sprig(x0, y0, cx, cy, x1, y1, n, 4.2, [NV, NV2], NV)).join('');
   const blooms = (list) => list.map(([x, y, r]) => flower5(x, y, r, BL, WH)).join('');
