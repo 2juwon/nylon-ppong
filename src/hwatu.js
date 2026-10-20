@@ -1,5 +1,5 @@
-/* 화투패 48장 그림 (직접 그린 SVG, 50×80)
- * 전통 화투 구도를 따름: 빨간 테두리 + 흰 바탕, 검정·빨강·노랑·파랑의 납작한 색면.
+/* 화투패 48장 그림 (직접 그린 SVG, 50×80) — 귀여운 그림체
+ * 둥근 모양, 윤곽선 없는 색면, 부드러운 색, 동글한 눈과 볼 터치. 테두리는 빨강, 바탕은 크림색.
  * HW.sprite() → <defs> 안에 넣을 48장 그림, HW.use(id) → 카드 한 장을 그리는 <use>.
  * 카드 id 0~47: 월 = (id >> 2) + 1, 같은 월 안의 순서 = id & 3 (TYPES 순서와 같음)
  */
@@ -9,12 +9,12 @@
   else root.HW = api;
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
-  const R = '#d7261d', K = '#121212', Y = '#f2c014', B = '#2565b8', W = '#ffffff', PK = '#f7aaa6', TL = '#1d8c86';
+  const RD = '#ee5246', RD2 = '#f47b70', NV = '#2d3552', NV2 = '#3d4870', YL = '#ffc93f', YL2 = '#ffe08a', BL = '#4b7fd6', BL2 = '#7aa3ea',
+    PK = '#ffb3ad', PK2 = '#ffd3cf', GN = '#4fae73', GN2 = '#3b8f5d', SKY = '#e2f1fb', CR = '#fffaf1', OR = '#ff9b3d', OR2 = '#ffb866',
+    BR = '#7a4a2e', WH = '#ffffff', SKIN = '#ffe2c4';
   const f = (n) => Math.round(n * 100) / 100;
   const rad = (d) => (d * Math.PI) / 180;
-  const poly = (pts) => pts.map(([x, y], i) => (i ? 'L' : 'M') + f(x) + ' ' + f(y)).join('') + 'Z';
 
-  // 각 월 네 장의 종류 (게임 점수와는 상관없이 모양새만)
   const TYPES = {
     1: ['gwang', 'hong', 'pi', 'pi'], 2: ['yeol', 'hong', 'pi', 'pi'], 3: ['gwang', 'hong', 'pi', 'pi'],
     4: ['yeol', 'cho', 'pi', 'pi'], 5: ['yeol', 'cho', 'pi', 'pi'], 6: ['yeol', 'cheong', 'pi', 'pi'],
@@ -23,393 +23,233 @@
   };
 
   /* ───── 공통 조각 ───── */
-  const gwang = (x, y) => `<circle cx="${x}" cy="${y}" r="4.7" fill="${R}" stroke="${W}" stroke-width="0.9"/><text x="${x}" y="${f(y + 2.25)}" font-size="6.3" text-anchor="middle" fill="${W}" font-weight="700" font-family="'Noto Serif CJK KR','Noto Serif KR','Batang','AppleMyungjo',serif">光</text>`;
-  // 띠: 아래 끝이 갈라진 긴 종이. label이 있으면 세로 글씨
-  function ribbon(x, y, rot, color, label, len = 32) {
-    const w = 9.6;
-    const body = `<path d="M0 0H${w}V${len}L${w / 2} ${len - 3.2}L0 ${len}Z" fill="${color}" stroke="${K}" stroke-width="0.5"/>`;
-    let txt = '';
-    if (label) {
-      const fill = K;
-      txt = Array.from(label).map((ch, i) => `<text x="${w / 2}" y="${f(8.6 + i * 9.4)}" font-size="7.4" text-anchor="middle" fill="${fill}" font-weight="700" font-family="'Nanum Brush Script','Nanum Pen Script','Gungsuh','Batang',serif">${ch}</text>`).join('');
-    }
-    return `<g transform="translate(${x} ${y}) rotate(${rot})">${body}${txt}</g>`;
+  const bg = (c) => `<rect width="50" height="80" fill="${c}"/>`;
+  const gwang = (x, y) => `<circle cx="${x}" cy="${y}" r="4.4" fill="${RD}" stroke="${WH}" stroke-width="0.8"/><text x="${x}" y="${f(y + 2.1)}" font-size="5.8" text-anchor="middle" fill="${WH}" font-weight="700" font-family="'Noto Sans CJK KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif">光</text>`;
+  const eye = (x, y, r = 0.9) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${NV}"/><circle cx="${f(x + r * 0.35)}" cy="${f(y - r * 0.35)}" r="${f(r * 0.38)}" fill="${WH}"/>`;
+  const cheek = (x, y, s = 1) => `<ellipse cx="${x}" cy="${y}" rx="${f(1.6 * s)}" ry="${f(1 * s)}" fill="${PK}"/>`;
+  // 띠: 끝이 둥근 막대 + 흰 글씨
+  function pill(x, y, rot, color, label) {
+    const txt = label ? Array.from(label).map((ch, i) => `<text x="5" y="${f(10.4 + i * 9)}" font-size="6.8" text-anchor="middle" fill="${WH}" font-weight="700" font-family="'Noto Sans CJK KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif">${ch}</text>`).join('') : '';
+    return `<g transform="translate(${x} ${y}) rotate(${rot})"><rect width="10" height="30" rx="5" fill="${color}"/><rect x="1.6" y="2" width="2" height="26" rx="1" fill="${WH}" opacity="0.18"/>${txt}</g>`;
   }
-  const hong = (x, y, rot) => ribbon(x, y, rot, R, '홍단');
-  const cheong = (x, y, rot) => ribbon(x, y, rot, B, '청단');
-  const cho = (x, y, rot) => ribbon(x, y, rot, R, '', 30);
+  const hong = (x, y, r) => pill(x, y, r, RD, '홍단');
+  const cheong = (x, y, r) => pill(x, y, r, BL, '청단');
+  const cho = (x, y, r) => pill(x, y, r, RD, '');
 
-  // 산등성이: 꼭짓점 목록 → 검은 산 + 가장자리 흰 솔잎 결 + 봉우리마다 노란 솔잎
-  function ridge(pts, tips) {
-    let s = `<path d="${poly([[pts[0][0], 82], ...pts, [pts[pts.length - 1][0], 82]])}" fill="${K}"/>`;
-    let d = '';
-    for (let i = 0; i < pts.length - 1; i++) {
-      const [x0, y0] = pts[i], [x1, y1] = pts[i + 1];
-      const L = Math.hypot(x1 - x0, y1 - y0), n = Math.floor(L / 1.25);
-      const nx = -(y1 - y0) / L, ny = (x1 - x0) / L; // 아래쪽(산 안쪽)으로 향하는 법선
-      const sgn = ny > 0 ? 1 : -1;
-      for (let k = 1; k < n; k++) {
-        const t = k / n, px = x0 + (x1 - x0) * t, py = y0 + (y1 - y0) * t;
-        const len = 1.4 + ((k * 7) % 3) * 0.45;
-        d += `M${f(px)} ${f(py)}l${f(nx * sgn * len + (x1 - x0) / L * 0.5)} ${f(ny * sgn * len)}`;
-      }
-    }
-    s += `<path d="${d}" stroke="${W}" stroke-width="0.45" fill="none"/>`;
-    (tips || []).forEach(([x, y, r = 1.6]) => {
-      s += `<path d="M${f(x - r)} ${f(y + 0.6)}Q${x} ${f(y - r * 1.6)} ${f(x + r)} ${f(y + 0.6)}Z" fill="${Y}" stroke="${K}" stroke-width="0.3"/>`;
-    });
-    return s;
+  // 둥근 언덕 (송학의 산) + 노란 솔방울 점
+  function humps(list, color = NV) {
+    return list.map(([cx, top, w]) => `<path d="M${f(cx - w)} 84C${f(cx - w)} ${f(top + 4)} ${f(cx - w * 0.55)} ${top} ${cx} ${top}C${f(cx + w * 0.55)} ${top} ${f(cx + w)} ${f(top + 4)} ${f(cx + w)} 84Z" fill="${color}"/>` +
+      `<circle cx="${f(cx - w * 0.38)}" cy="${f(top + 2.6)}" r="1.3" fill="${YL}"/><circle cx="${cx}" cy="${f(top + 1.1)}" r="1.4" fill="${YL}"/><circle cx="${f(cx + w * 0.38)}" cy="${f(top + 2.6)}" r="1.3" fill="${YL}"/>`).join('');
   }
-
-  // 매화: 꽃잎 다섯 장 + 노란 수술
-  function plum(cx, cy, r, rot = 0) {
-    let s = `<g transform="translate(${cx} ${cy}) rotate(${rot})">`;
-    for (let i = 0; i < 5; i++) {
-      const a = rad(i * 72 - 90);
-      s += `<circle cx="${f(Math.cos(a) * r * 0.5)}" cy="${f(Math.sin(a) * r * 0.5)}" r="${f(r * 0.52)}" fill="${R}" stroke="${K}" stroke-width="0.35"/>`;
-    }
-    s += `<circle r="${f(r * 0.34)}" fill="${Y}"/>`;
-    for (let i = 0; i < 6; i++) { const a = rad(i * 60); s += `<circle cx="${f(Math.cos(a) * r * 0.22)}" cy="${f(Math.sin(a) * r * 0.22)}" r="0.32" fill="${R}"/>`; }
-    return s + '</g>';
+  // 꽃잎 다섯 장 꽃 (매화·벚꽃·오동꽃)
+  function flower5(cx, cy, r, col, mid = YL, notch = false) {
+    let s = '';
+    for (let i = 0; i < 5; i++) { const a = rad(i * 72 - 90); s += `<circle cx="${f(cx + Math.cos(a) * r * 0.55)}" cy="${f(cy + Math.sin(a) * r * 0.55)}" r="${f(r * 0.5)}" fill="${col}"/>`; }
+    if (notch) for (let i = 0; i < 5; i++) { const a = rad(i * 72 - 90); s += `<circle cx="${f(cx + Math.cos(a) * r * 1.02)}" cy="${f(cy + Math.sin(a) * r * 1.02)}" r="${f(r * 0.13)}" fill="${CR}"/>`; }
+    return s + `<circle cx="${cx}" cy="${cy}" r="${f(r * 0.3)}" fill="${mid}"/>`;
   }
-  const bud = (cx, cy, r) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${R}" stroke="${K}" stroke-width="0.35"/><path d="M${f(cx - r * 0.7)} ${f(cy + r * 0.6)}L${cx} ${f(cy + r * 1.5)}L${f(cx + r * 0.7)} ${f(cy + r * 0.6)}Z" fill="${K}"/>`;
-
-  // 벚꽃: 끝이 파인 꽃잎 다섯 장
-  function cherry(cx, cy, r, fill, rot = 0) {
-    const edge = fill === R ? K : R;
-    let s = `<g transform="translate(${cx} ${cy}) rotate(${rot})">`;
-    const pet = `M0 0C${f(-r * 0.55)} ${f(-r * 0.3)} ${f(-r * 0.62)} ${f(-r * 0.95)} ${f(-r * 0.2)} ${f(-r * 1.02)}L0 ${f(-r * 0.82)}L${f(r * 0.2)} ${f(-r * 1.02)}C${f(r * 0.62)} ${f(-r * 0.95)} ${f(r * 0.55)} ${f(-r * 0.3)} 0 0Z`;
-    for (let i = 0; i < 5; i++) s += `<path d="${pet}" transform="rotate(${i * 72})" fill="${fill}" stroke="${edge}" stroke-width="0.4"/>`;
-    s += `<circle r="${f(r * 0.24)}" fill="${fill === R ? Y : R}"/>`;
-    for (let i = 0; i < 5; i++) { const a = rad(i * 72 + 36); s += `<path d="M0 0L${f(Math.cos(a) * r * 0.5)} ${f(Math.sin(a) * r * 0.5)}" stroke="${fill === R ? Y : R}" stroke-width="0.35"/>`; }
-    return s + '</g>';
-  }
-
-  // 줄기에 동그란 잎이 번갈아 달림 (흑싸리·홍싸리)
-  function stem(x0, y0, cx, cy, x1, y1, n, size, colors, sideways = 0) {
-    let s = `<path d="M${x0} ${y0}Q${cx} ${cy} ${x1} ${y1}" stroke="${K}" stroke-width="0.7" fill="none"/>`;
+  const dot = (x, y, r, c) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}"/>`;
+  // 나뭇가지 (둥근 끝 갈색 선)
+  const branch = (d, w = 2.6, c = BR) => `<path d="${d}" stroke="${c}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+  // 잎이 양쪽에 달린 줄기
+  function sprig(x0, y0, cx, cy, x1, y1, n, size, cols, stemC = BR) {
+    let s = `<path d="M${x0} ${y0}Q${cx} ${cy} ${x1} ${y1}" stroke="${stemC}" stroke-width="1" fill="none" stroke-linecap="round"/>`;
     for (let i = 1; i <= n; i++) {
-      const t = i / (n + 0.6);
-      const px = (1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * cx + t * t * x1;
-      const py = (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * cy + t * t * y1;
+      const t = i / (n + 0.3);
+      const px = (1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * cx + t * t * x1, py = (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * cy + t * t * y1;
       const dx = 2 * (1 - t) * (cx - x0) + 2 * t * (x1 - cx), dy = 2 * (1 - t) * (cy - y0) + 2 * t * (y1 - cy);
       const ang = Math.atan2(dy, dx) * 180 / Math.PI;
-      const side = i % 2 ? 1 : -1;
-      const sz = size * (1 - t * 0.35);
-      const col = colors[i % colors.length];
-      s += `<ellipse cx="0" cy="${f(-sz * 0.9)}" rx="${f(sz * 0.5)}" ry="${f(sz * 0.95)}" fill="${col}" transform="translate(${f(px)} ${f(py)}) rotate(${f(ang + 90 + side * (50 + sideways))})"/>`;
+      [-1, 1].forEach((side, k) => { s += `<ellipse cx="0" cy="${f(-size * 0.55)}" rx="${f(size * 0.32)}" ry="${f(size * 0.55)}" fill="${cols[(i + k) % cols.length]}" transform="translate(${f(px)} ${f(py)}) rotate(${f(ang + 90 + side * 55)})"/>`; });
     }
     return s;
   }
-
-  // 길쭉한 칼잎 (난초·창포)
-  const blade = (x, y, h, lean, w = 3.2) => `<path d="M${f(x - w / 2)} ${y}Q${f(x + lean * 0.3)} ${f(y - h * 0.6)} ${f(x + lean)} ${f(y - h)}Q${f(x + lean * 0.2 + w * 0.3)} ${f(y - h * 0.5)} ${f(x + w / 2)} ${y}Z" fill="${K}"/>`;
-  // 붓꽃
-  function iris(cx, cy, s) {
-    const p = (d) => `<path d="${d}" fill="${B}" stroke="${K}" stroke-width="0.35"/>`;
-    return `<g transform="translate(${cx} ${cy}) scale(${s})">` +
-      p('M0 0C-1.6 -3 -1.2 -6.5 0 -8C1.2 -6.5 1.6 -3 0 0Z') +
-      p('M0 0C-2.5 -1.5 -6 -1 -7 2C-5.5 4.5 -3 4 -1 1.5Z') +
-      p('M0 0C2.5 -1.5 6 -1 7 2C5.5 4.5 3 4 1 1.5Z') +
-      `<path d="M-4.8 1.6L-2 0.8M4.8 1.6L2 0.8" stroke="${Y}" stroke-width="0.7"/><path d="M0 0.5L0 6" stroke="${K}" stroke-width="0.7"/></g>`;
+  // 위에서 늘어지는 줄기에 동그란 잎 (흑싸리)
+  function hang(x, len, sway, n, r) {
+    let s = `<path d="M${x} -2Q${f(x + sway)} ${f(len * 0.5)} ${f(x + sway * 0.4)} ${len}" stroke="${NV}" stroke-width="0.9" fill="none" stroke-linecap="round"/>`;
+    for (let i = 0; i < n; i++) {
+      const t = (i + 0.7) / n;
+      const px = (1 - t) * (1 - t) * x + 2 * (1 - t) * t * (x + sway) + t * t * (x + sway * 0.4), py = (1 - t) * (1 - t) * -2 + 2 * (1 - t) * t * (len * 0.5) + t * t * len;
+      const rr = r * (1 - t * 0.35);
+      s += `<ellipse cx="${f(px - rr * 0.9)}" cy="${f(py)}" rx="${f(rr * 0.75)}" ry="${f(rr)}" fill="${NV}" transform="rotate(25 ${f(px - rr * 0.9)} ${f(py)})"/><ellipse cx="${f(px + rr * 0.9)}" cy="${f(py + rr * 0.5)}" rx="${f(rr * 0.75)}" ry="${f(rr)}" fill="${NV}" transform="rotate(-25 ${f(px + rr * 0.9)} ${f(py + rr * 0.5)})"/>`;
+    }
+    return s + dot(f(x + sway * 0.4), len + 0.6, f(r * 0.5), NV);
   }
-
-  // 모란
+  // 둥근 칼잎 (난초)
+  const blade = (x, h, lean, w = 4.6, c = GN) => `<path d="M${f(x - w / 2)} 84C${f(x - w / 2)} ${f(84 - h * 0.6)} ${f(x + lean - w * 0.3)} ${f(84 - h * 0.95)} ${f(x + lean)} ${f(84 - h)}C${f(x + lean + w * 0.3)} ${f(84 - h * 0.9)} ${f(x + w / 2)} ${f(84 - h * 0.6)} ${f(x + w / 2)} 84Z" fill="${c}"/>`;
+  const blades = (list) => list.map(([x, h, l], i) => blade(x, h, l, 4.6, i % 2 ? GN : GN2)).join('');
+  // 붓꽃 (둥근 꽃잎 셋)
+  function iris(cx, cy, s, stem = true) {
+    return (stem ? `<path d="M${cx} ${cy}L${cx} ${f(cy + 16 * s)}" stroke="${GN2}" stroke-width="${f(1 * s)}" stroke-linecap="round"/>` : '') +
+      `<g transform="translate(${cx} ${cy}) scale(${s})"><ellipse cx="-3.6" cy="1.2" rx="3.6" ry="2.4" fill="${BL}" transform="rotate(30 -3.6 1.2)"/><ellipse cx="3.6" cy="1.2" rx="3.6" ry="2.4" fill="${BL}" transform="rotate(-30 3.6 1.2)"/>` +
+      `<ellipse cx="0" cy="-3.4" rx="2.2" ry="3.8" fill="${BL2}"/><ellipse cx="-3" cy="1.2" rx="1.4" ry="0.7" fill="${YL}" transform="rotate(30 -3 1.2)"/><ellipse cx="3" cy="1.2" rx="1.4" ry="0.7" fill="${YL}" transform="rotate(-30 3 1.2)"/></g>`;
+  }
+  // 모란 (겹꽃잎 동그라미)
   function peony(cx, cy, r) {
     let s = `<g transform="translate(${cx} ${cy})">`;
-    for (let i = 0; i < 9; i++) { const a = rad(i * 40 + 10); s += `<circle cx="${f(Math.cos(a) * r * 0.62)}" cy="${f(Math.sin(a) * r * 0.62)}" r="${f(r * 0.42)}" fill="${R}" stroke="${K}" stroke-width="0.4"/>`; }
-    s += `<circle r="${f(r * 0.66)}" fill="${R}"/>`;
-    for (let i = 0; i < 6; i++) { const a = rad(i * 60 + 30); s += `<path d="M${f(Math.cos(a) * r * 0.2)} ${f(Math.sin(a) * r * 0.2)}Q${f(Math.cos(a + 0.5) * r * 0.62)} ${f(Math.sin(a + 0.5) * r * 0.62)} ${f(Math.cos(a + 1) * r * 0.45)} ${f(Math.sin(a + 1) * r * 0.45)}" stroke="${K}" stroke-width="0.4" fill="none"/>`; }
-    s += `<path d="M${f(-r * 0.25)} ${f(r * 0.05)}Q0 ${f(-r * 0.4)} ${f(r * 0.25)} ${f(r * 0.05)}Q0 ${f(r * 0.25)} ${f(-r * 0.25)} ${f(r * 0.05)}Z" fill="${Y}" stroke="${K}" stroke-width="0.3"/>`;
-    return s + '</g>';
+    for (let i = 0; i < 7; i++) { const a = rad(i * 51.4 - 90); s += `<circle cx="${f(Math.cos(a) * r * 0.62)}" cy="${f(Math.sin(a) * r * 0.62)}" r="${f(r * 0.48)}" fill="${RD}"/>`; }
+    return s + `<circle r="${f(r * 0.66)}" fill="${RD2}"/><circle r="${f(r * 0.4)}" fill="${RD}"/><circle r="${f(r * 0.18)}" fill="${YL}"/></g>`;
   }
-  // 끝이 셋으로 갈라진 검은 잎 (모란)
-  const peonyLeaf = (x, y, s, rot) => `<path d="M0 2C-3 -1 -7 -2 -9 -6L-6.5 -6.4L-8.5 -10L-5 -9.4L-5.6 -13.5L-2.4 -11L-1 -16L0.6 -11.4L3.4 -14.6L3.6 -10L7.6 -11.6L6 -7.4L9.6 -6.6C7 -2.5 3 -1 0 2Z" fill="${K}" transform="translate(${x} ${y}) rotate(${rot}) scale(${s})"/>`;
-
-  // 국화
-  function chrys(cx, cy, r, outer, inner) {
+  const blobLeaf = (x, y, s, rot, col = GN) => `<path d="M0 0C-6 -2 -8 -9 -4 -13C-2 -15 2 -15 4 -13C8 -9 6 -2 0 0Z" fill="${col}" transform="translate(${x} ${y}) rotate(${rot}) scale(${s})"/><path d="M0 -1L0 -11" stroke="${WH}" stroke-width="0.5" opacity="0.5" transform="translate(${x} ${y}) rotate(${rot}) scale(${s})"/>`;
+  // 국화 (둥근 꽃잎 고리 둘)
+  function chrys(cx, cy, r, outer = OR, inner = YL) {
     let s = `<g transform="translate(${cx} ${cy})">`;
-    for (let i = 0; i < 22; i++) { const a = i * (360 / 22); s += `<path d="M0 0L${f(-r * 0.12)} ${f(-r * 0.7)}L0 ${f(-r)}L${f(r * 0.12)} ${f(-r * 0.7)}Z" fill="${outer}" stroke="${K}" stroke-width="0.25" transform="rotate(${f(a)})"/>`; }
-    for (let i = 0; i < 16; i++) { const a = i * 22.5 + 11; s += `<path d="M0 0L${f(-r * 0.1)} ${f(-r * 0.45)}L0 ${f(-r * 0.62)}L${f(r * 0.1)} ${f(-r * 0.45)}Z" fill="${inner}" stroke="${K}" stroke-width="0.2" transform="rotate(${f(a)})"/>`; }
-    return s + `<circle r="${f(r * 0.2)}" fill="${Y}" stroke="${K}" stroke-width="0.3"/></g>`;
+    for (let i = 0; i < 12; i++) { const a = rad(i * 30); s += `<ellipse cx="${f(Math.cos(a) * r * 0.66)}" cy="${f(Math.sin(a) * r * 0.66)}" rx="${f(r * 0.36)}" ry="${f(r * 0.2)}" fill="${outer}" transform="rotate(${i * 30} ${f(Math.cos(a) * r * 0.66)} ${f(Math.sin(a) * r * 0.66)})"/>`; }
+    for (let i = 0; i < 9; i++) { const a = rad(i * 40 + 20); s += `<ellipse cx="${f(Math.cos(a) * r * 0.36)}" cy="${f(Math.sin(a) * r * 0.36)}" rx="${f(r * 0.24)}" ry="${f(r * 0.14)}" fill="${inner}" transform="rotate(${i * 40 + 20} ${f(Math.cos(a) * r * 0.36)} ${f(Math.sin(a) * r * 0.36)})"/>`; }
+    return s + `<circle r="${f(r * 0.18)}" fill="${RD}"/></g>`;
   }
-  // 몽글몽글한 검은 잎 덩어리 (국화·오동)
-  function blob(cx, cy, r, n = 7, seed = 1) {
-    let s = '';
-    for (let i = 0; i < n; i++) {
-      const a = rad(i * (360 / n) + seed * 17);
-      const rr = r * (0.55 + ((i * 37 + seed * 13) % 10) / 40);
-      s += `<circle cx="${f(cx + Math.cos(a) * r * 0.55)}" cy="${f(cy + Math.sin(a) * r * 0.45)}" r="${f(rr * 0.6)}" fill="${K}"/>`;
-    }
-    return s + `<ellipse cx="${cx}" cy="${cy}" rx="${f(r * 0.7)}" ry="${f(r * 0.55)}" fill="${K}"/>`;
+  // 둥근 구름 같은 잎 덩어리 (국화·오동)
+  const puff = (cx, cy, r, c = NV) => `<circle cx="${f(cx - r * 0.55)}" cy="${f(cy + r * 0.1)}" r="${f(r * 0.55)}" fill="${c}"/><circle cx="${f(cx + r * 0.55)}" cy="${f(cy + r * 0.1)}" r="${f(r * 0.55)}" fill="${c}"/><circle cx="${cx}" cy="${f(cy - r * 0.3)}" r="${f(r * 0.65)}" fill="${c}"/><rect x="${f(cx - r * 1.1)}" y="${f(cy + r * 0.1)}" width="${f(r * 2.2)}" height="${f(r * 0.55)}" rx="${f(r * 0.27)}" fill="${c}"/>`;
+  // 단풍잎 (끝이 둥근 별)
+  function maple(cx, cy, r, col, rot = 0) {
+    let s = `<g transform="translate(${cx} ${cy}) rotate(${rot})">`;
+    [-90, -30, 30, 150, 210].forEach((a, i) => { const k = i === 0 ? 1 : i < 3 ? 0.9 : 0.75; s += `<ellipse cx="${f(Math.cos(rad(a)) * r * 0.5 * k)}" cy="${f(Math.sin(rad(a)) * r * 0.5 * k)}" rx="${f(r * 0.24)}" ry="${f(r * 0.5 * k)}" fill="${col}" transform="rotate(${a + 90} ${f(Math.cos(rad(a)) * r * 0.5 * k)} ${f(Math.sin(rad(a)) * r * 0.5 * k)})"/>`; });
+    return s + `<circle r="${f(r * 0.32)}" fill="${col}"/><path d="M0 0L0 ${f(r * 0.85)}" stroke="${col}" stroke-width="${f(r * 0.1)}" stroke-linecap="round"/></g>`;
   }
-
-  // 단풍잎
-  function maple(cx, cy, r, fill, rot = 0) {
-    const pts = [];
-    const lobes = [[-90, 1], [-62, 0.42], [-38, 0.95], [-10, 0.4], [18, 0.82], [45, 0.36], [70, 0.35], [90, 0.25], [110, 0.35], [135, 0.36], [162, 0.82], [190, 0.4], [218, 0.95], [242, 0.42]];
-    lobes.forEach(([a, k]) => pts.push([Math.cos(rad(a)) * r * k, Math.sin(rad(a)) * r * k]));
-    let s = `<g transform="translate(${cx} ${cy}) rotate(${rot})"><path d="${poly(pts)}" fill="${fill}" stroke="${fill === K ? K : K}" stroke-width="0.35" stroke-linejoin="round"/>`;
-    if (fill !== K) s += `<path d="M0 ${f(r * 0.25)}L0 ${f(-r * 0.85)}M0 0L${f(r * 0.8)} ${f(-r * 0.4)}M0 0L${f(-r * 0.8)} ${f(-r * 0.4)}M0 0L${f(r * 0.65)} ${f(r * 0.3)}M0 0L${f(-r * 0.65)} ${f(r * 0.3)}" stroke="${K}" stroke-width="0.3"/>`;
-    return s + `<path d="M0 ${f(r * 0.25)}L0 ${f(r * 0.75)}" stroke="${K}" stroke-width="0.5"/></g>`;
-  }
-
-  // 오동잎: 크고 넓은 검은 잎
-  const paulLeaf = (x, y, s, rot = 0) => `<path d="M0 0C-6 1 -12 -2 -13 -8C-14 -13 -10 -15 -7 -14C-6 -17 -2 -19 0 -18C2 -19 6 -17 7 -14C10 -15 14 -13 13 -8C12 -2 6 1 0 0Z" fill="${K}" transform="translate(${x} ${y}) rotate(${rot}) scale(${s})"/>`;
-  // 오동꽃 (파란 별 모양)
-  function star(cx, cy, r) {
-    const pts = [];
-    for (let i = 0; i < 10; i++) { const a = rad(i * 36 - 90); const k = i % 2 ? 0.45 : 1; pts.push([cx + Math.cos(a) * r * k, cy + Math.sin(a) * r * k]); }
-    return `<path d="${poly(pts)}" fill="${B}" stroke="${K}" stroke-width="0.35" stroke-linejoin="round"/><circle cx="${cx}" cy="${cy}" r="${f(r * 0.18)}" fill="${W}"/>`;
-  }
-
-  // 버드나무 가지: 위에서 늘어지는 굵은 검은 줄기
-  const willow = (x, w, sway, len) => `<path d="M${f(x - w / 2)} -2C${f(x - w / 2 + sway)} ${f(len * 0.4)} ${f(x + sway * 0.4)} ${f(len * 0.8)} ${f(x + sway * 0.8)} ${len}C${f(x + sway * 0.4 + w * 0.6)} ${f(len * 0.75)} ${f(x + w / 2 + sway)} ${f(len * 0.4)} ${f(x + w / 2)} -2Z" fill="${K}"/>`;
-
-  // 붉은 구름 (테두리만)
-  const cloud = (x, y, s, col = R) => `<path d="M0 0C-1 -3 2 -5 4 -3C5 -6 9 -6 10 -3C12 -5 15 -3 14 0Z" fill="${W}" stroke="${col}" stroke-width="0.8" transform="translate(${x} ${y}) scale(${s})"/><path d="M${f(x + 2 * s)} ${f(y - 1.2 * s)}q${f(1.5 * s)} ${f(-1.2 * s)} ${f(3 * s)} 0M${f(x + 7 * s)} ${f(y - 1.5 * s)}q${f(1.5 * s)} ${f(-1.2 * s)} ${f(3 * s)} 0" stroke="${col}" stroke-width="0.6" fill="none"/>`;
-
-  // 새: 몸·배·날개·부리 (dir 1 = 오른쪽을 봄)
-  function songbird(x, y, s, dir, body, belly, wing) {
-    return `<g transform="translate(${x} ${y}) scale(${f(s * dir)} ${s})">` +
-      `<path d="M-9 4L-15 7L-14 4L-16 2L-9 2Z" fill="${wing}" stroke="${K}" stroke-width="0.4"/>` +
-      `<path d="M-10 3C-8 -3 -1 -5 4 -4C7 -4 8 -2 7 0C5 3 0 5 -5 5C-8 5 -10 4 -10 3Z" fill="${body}" stroke="${K}" stroke-width="0.5"/>` +
-      `<path d="M-6 4C-3 2 2 2 6 0C5 3 0 5 -5 5Z" fill="${belly}" stroke="${K}" stroke-width="0.4"/>` +
-      `<path d="M-8 1C-5 -2 -1 -2 1 0C-2 1 -5 2 -8 1Z" fill="${wing}" stroke="${K}" stroke-width="0.4"/>` +
-      `<path d="M7 -2.4L10 -1.6L7 -0.6Z" fill="${K}"/><circle cx="4.6" cy="-2.2" r="0.6" fill="${K}"/></g>`;
-  }
-  // 날아가는 새 (뻐꾸기·기러기·제비)
-  function flyer(x, y, s, rot, body, wing, accent) {
-    return `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${s})">` +
-      `<path d="M-2 -1C-6 -7 -11 -9 -15 -8C-11 -5 -8 -2 -5 1Z" fill="${wing}" stroke="${K}" stroke-width="0.5"/>` +
-      `<path d="M-11 1C-7 -2 0 -3 6 -2C9 -1.5 10 0 9 1C7 3 0 4 -6 3L-12 5L-11 2Z" fill="${body}" stroke="${K}" stroke-width="0.5"/>` +
-      `<path d="M-1 0C2 4 3 8 2 12C0 9 -3 5 -5 2Z" fill="${wing}" stroke="${K}" stroke-width="0.5"/>` +
-      (accent ? `<path d="M2 1C4 2 6 2 8 1" stroke="${accent}" stroke-width="1.1" fill="none"/>` : '') +
-      `<path d="M9 -0.5L12 0.3L9 1.1Z" fill="${K}"/><circle cx="7" cy="-0.6" r="0.55" fill="${K}"/></g>`;
-  }
-
-  // 넓게 휘는 칼잎 (난초)
-  function sword(x, h, lean, w = 6) {
-    const tx = x + lean, ty = 82 - h;
-    return `<path d="M${f(x - w / 2)} 82C${f(x - w / 2 + lean * 0.15)} ${f(82 - h * 0.55)} ${f(tx - w * 0.35)} ${f(ty + h * 0.18)} ${f(tx)} ${f(ty)}C${f(tx + w * 0.1)} ${f(ty + h * 0.25)} ${f(x + w / 2 + lean * 0.3)} ${f(82 - h * 0.45)} ${f(x + w / 2)} 82Z" fill="${K}" stroke="${W}" stroke-width="0.35"/>`;
-  }
-  const swords = (list) => list.map(([x, h, l, w]) => sword(x, h, l, w || 6)).join('');
-
-  // 홍싸리 가지: 휘어진 줄기에 잎이 양쪽으로 짝지어 달리고, 끝쪽 잎은 빨강
-  function bush(x0, y0, cx, cy, x1, y1, n, len) {
-    let s = `<path d="M${x0} ${y0}Q${cx} ${cy} ${x1} ${y1}" stroke="${K}" stroke-width="0.8" fill="none"/>`;
-    for (let i = 1; i <= n; i++) {
-      const t = i / (n + 0.4);
-      const px = (1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * cx + t * t * x1;
-      const py = (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * cy + t * t * y1;
-      const dx = 2 * (1 - t) * (cx - x0) + 2 * t * (x1 - cx), dy = 2 * (1 - t) * (cy - y0) + 2 * t * (y1 - cy);
-      const ang = Math.atan2(dy, dx) * 180 / Math.PI;
-      const L = len * (1 - t * 0.3);
-      [-1, 1].forEach((side, k) => {
-        const col = t > 0.5 ? ((i + k) % 3 === 0 ? K : R) : ((i + k) % 3 === 0 ? R : K);
-        s += `<ellipse cx="0" cy="${f(-L * 0.5)}" rx="${f(L * 0.2)}" ry="${f(L * 0.5)}" fill="${col}" transform="translate(${f(px)} ${f(py)}) rotate(${f(ang + 90 + side * 58)})"/>`;
-      });
-    }
-    const ang = Math.atan2(y1 - cy, x1 - cx) * 180 / Math.PI;
-    return s + `<ellipse cx="0" cy="${f(-len * 0.4)}" rx="${f(len * 0.17)}" ry="${f(len * 0.42)}" fill="${R}" transform="translate(${x1} ${y1}) rotate(${f(ang + 90)})"/>`;
-  }
-
-  // 오동잎: 물결 테두리의 넓은 잎
-  function pLeaf(cx, cy, r, rot = 0) {
-    const pts = [];
-    for (let i = 0; i < 18; i++) {
-      const a = rad(i * 20 - 90);
-      const k = i === 0 ? 1.08 : i % 2 ? 0.74 : 1;
-      const sy = Math.sin(a) > 0 ? 0.7 : 0.92;
-      pts.push([Math.cos(a) * r * k * 1.28, Math.sin(a) * r * k * sy]);
-    }
-    let d = '';
-    pts.forEach((p, i) => {
-      const q = pts[(i + 1) % pts.length];
-      const m = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
-      d += (i ? '' : `M${f(m[0])} ${f(m[1])}`);
-      const n = pts[(i + 2) % pts.length], m2 = [(q[0] + n[0]) / 2, (q[1] + n[1]) / 2];
-      d += `Q${f(q[0])} ${f(q[1])} ${f(m2[0])} ${f(m2[1])}`;
-    });
-    return `<g transform="translate(${cx} ${cy}) rotate(${rot})"><path d="${d}Z" fill="${K}" stroke="${W}" stroke-width="0.4"/>` +
-      `<path d="M0 ${f(r * 0.6)}L0 ${f(r * 1.15)}M0 ${f(r * 0.5)}L0 ${f(-r * 0.6)}M0 0L${f(-r * 0.7)} ${f(-r * 0.4)}M0 0L${f(r * 0.7)} ${f(-r * 0.4)}M0 ${f(r * 0.25)}L${f(-r * 0.8)} ${f(r * 0.2)}M0 ${f(r * 0.25)}L${f(r * 0.8)} ${f(r * 0.2)}" stroke="${W}" stroke-width="0.35"/><path d="M0 ${f(r * 0.62)}L0 ${f(r * 1.15)}" stroke="${K}" stroke-width="1"/></g>`;
-  }
-  // 오동꽃 송이: 가는 줄기 끝에 파란 꽃
-  function pFlowers(x, y, spread, up = 1) {
-    const tips = [[-spread, -8 * up], [0, -11 * up], [spread, -7 * up]];
-    let s = tips.map(([dx, dy]) => `<path d="M${x} ${y}Q${f(x + dx * 0.3)} ${f(y + dy * 0.6)} ${f(x + dx)} ${f(y + dy)}" stroke="${K}" stroke-width="0.7" fill="none"/>`).join('');
-    tips.forEach(([dx, dy], i) => { s += star(f(x + dx), f(y + dy), 3.2 - i * 0.2); });
-    return s;
-  }
-
-  // 버들가지: 위에서 휘어 늘어지는 줄기 + 긴 버들잎
-  function wbranch(x, len, bend, n, leaf = 16) {
-    let s = `<path d="M${x} -2Q${f(x + bend * 0.2)} ${f(len * 0.6)} ${f(x + bend)} ${len}" stroke="${K}" stroke-width="0.8" fill="none"/>`;
-    for (let i = 0; i < n; i++) {
-      const t = (i + 0.6) / n;
-      const px = (1 - t) * (1 - t) * x + 2 * (1 - t) * t * (x + bend * 0.2) + t * t * (x + bend);
-      const py = (1 - t) * (1 - t) * -2 + 2 * (1 - t) * t * (len * 0.6) + t * t * len;
-      const side = i % 2 ? 1 : -1, L = leaf * (0.75 + ((i * 7) % 4) * 0.1), w = 2.6;
-      const ex = px + side * L * 0.35 + bend * 0.15, ey = py + L;
-      s += `<path d="M${f(px)} ${f(py)}C${f(px + side * w * 2)} ${f(py + L * 0.3)} ${f(ex + side * w * 0.6)} ${f(ey - L * 0.35)} ${f(ex)} ${f(ey)}C${f(ex - side * w * 0.3)} ${f(ey - L * 0.4)} ${f(px - side * w * 0.2)} ${f(py + L * 0.35)} ${f(px)} ${f(py)}Z" fill="${K}"/>`;
+  // 버들가지 (남색 긴 잎)
+  function willow(x, len, sway, n) {
+    let s = `<path d="M${x} -2Q${f(x + sway)} ${f(len * 0.6)} ${f(x + sway * 0.5)} ${len}" stroke="${NV}" stroke-width="1" fill="none" stroke-linecap="round"/>`;
+    for (let k = 0; k < n; k++) {
+      const t = (k + 0.8) / n;
+      const px = (1 - t) * (1 - t) * x + 2 * (1 - t) * t * (x + sway) + t * t * (x + sway * 0.5), py = (1 - t) * (1 - t) * -2 + 2 * (1 - t) * t * (len * 0.6) + t * t * len;
+      const side = k % 2 ? 1 : -1;
+      s += `<ellipse cx="${f(px + side * 1.6)}" cy="${f(py + 2)}" rx="1.5" ry="4.4" fill="${NV}" transform="rotate(${side * -22} ${f(px + side * 1.6)} ${f(py + 2)})"/>`;
     }
     return s;
   }
+  // 물결
+  const water = (y, c = BL) => `<path d="M-2 ${y}C10 ${y - 4} 22 ${y + 3} 34 ${y - 1}C42 ${y - 3} 48 ${y - 1} 52 ${y - 2}V84H-2Z" fill="${c}"/><path d="M5 ${y + 6}q3 -1.6 6 0t6 0M25 ${y + 10}q3 -1.6 6 0t6 0" stroke="${WH}" stroke-width="0.8" fill="none" stroke-linecap="round"/>`;
+  // 구름 (흰 동그라미 뭉치)
+  const cloud = (x, y, s, c = WH) => `<g transform="translate(${x} ${y}) scale(${s})"><circle cx="0" cy="0" r="3" fill="${c}"/><circle cx="3.6" cy="-1.2" r="3.6" fill="${c}"/><circle cx="7.4" cy="0" r="2.8" fill="${c}"/><rect x="-1" y="0" width="9.4" height="2.8" rx="1.4" fill="${c}"/></g>`;
+
+  /* ───── 동물·사람 ───── */
+  // 학
+  const crane = `<path d="M10 48C10 41 16 37 23 38C30 39 32 46 29 51C26 56 17 57 13 54C11 52.5 10 51 10 48Z" fill="${WH}"/>` +
+    `<path d="M11 46C7 46 5 50 7 54C9 52 11 52 12 52Z" fill="${NV}"/><path d="M14 47C17 45 21 45 24 46" stroke="#dfe7ee" stroke-width="1" fill="none" stroke-linecap="round"/>` +
+    `<path d="M26 41C29 35 27 29 28 24" stroke="${WH}" stroke-width="3.4" fill="none" stroke-linecap="round"/><path d="M27.6 30C27.4 27 27.6 25 28 24" stroke="${NV}" stroke-width="3.4" fill="none" stroke-linecap="round"/>` +
+    `<circle cx="29.5" cy="21" r="4.4" fill="${WH}"/><path d="M27 17.6C27.6 16 31.4 16 32 17.6Z" fill="${RD}"/>` + eye(30.6, 20.6) + cheek(28.4, 23) +
+    `<path d="M33.6 20.4L38.6 21.6L33.6 23Z" fill="${OR}"/>` +
+    `<path d="M17 55V70M22 55V70" stroke="${OR}" stroke-width="1.2" stroke-linecap="round"/><path d="M14.6 70h4.6M20 70h4.6" stroke="${OR}" stroke-width="1.2" stroke-linecap="round"/>`;
+  // 앉아 있는 동그란 새
+  const roundBird = (x, y, s, body, belly, wing, dir = 1) => `<g transform="translate(${x} ${y}) scale(${f(s * dir)} ${s})"><path d="M-8 2L-14 4L-12 0Z" fill="${body}"/><circle r="8" fill="${body}"/><ellipse cx="2" cy="3.4" rx="5.2" ry="4" fill="${belly}"/><ellipse cx="-3" cy="-0.5" rx="3.6" ry="2.6" fill="${wing}"/>` + eye(3.2, -2.6, 1.1) + cheek(5.4, 0.6) + `<path d="M7.4 -2.6L10.4 -1.4L7.4 -0.2Z" fill="${OR}"/></g>`;
+  // 날아가는 동그란 새 (날개 펼침)
+  const flyBird = (x, y, s, rot, body, wing, belly, beak = OR) => `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${s})">` +
+    `<path d="M-2 -1C-4 -9 -10 -12 -15 -11C-12 -7 -8 -3 -4 0Z" fill="${wing}"/>` +
+    `<ellipse cx="0" cy="0" rx="8" ry="5.6" fill="${body}"/><ellipse cx="1.4" cy="2" rx="5" ry="3" fill="${belly}"/>` +
+    `<path d="M-1 1C2 7 1 12 -3 14C-4 9 -5 5 -4 2Z" fill="${wing}"/><path d="M-7 1L-12 3L-11 -1Z" fill="${body}"/>` +
+    eye(4.4, -1.6, 1) + cheek(5.6, 1.2, 0.8) + `<path d="M7.6 -1.4L10.6 -0.4L7.6 0.8Z" fill="${beak}"/></g>`;
+  const butterfly = (x, y, s, rot) => `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${s})"><ellipse cx="-3.6" cy="-2.4" rx="3.6" ry="3" fill="${YL}"/><ellipse cx="3.6" cy="-2.4" rx="3.6" ry="3" fill="${YL}"/><ellipse cx="-2.8" cy="2.4" rx="2.6" ry="2.2" fill="${OR2}"/><ellipse cx="2.8" cy="2.4" rx="2.6" ry="2.2" fill="${OR2}"/>` +
+    `<circle cx="-3.6" cy="-2.6" r="1" fill="${RD}"/><circle cx="3.6" cy="-2.6" r="1" fill="${RD}"/><ellipse rx="0.9" ry="4" fill="${NV}"/><path d="M-0.4 -3.6L-2 -6.6M0.4 -3.6L2 -6.6" stroke="${NV}" stroke-width="0.5" stroke-linecap="round"/></g>`;
 
   /* ───── 48장 ───── */
   const ART = {};
-
   // 1월 송학
-  ART[0] = `<circle cx="9" cy="10" r="13" fill="${R}"/>` +
-    ridge([[20, 82], [24, 66], [29, 56], [33, 50], [37, 44], [41, 40], [45, 36], [50, 33]], [[37, 44], [45, 36]]) +
-    ridge([[-1, 66], [4, 62], [8, 66], [12, 72], [14, 82]], [[4, 62, 1.3]]) +
-    // 학
-    `<path d="M8 50L1 54L5 55L1 59L8 56L11 55Z" fill="${K}"/>` +
-    `<path d="M7 51C7 44 16 40 24 43C29 45 29 53 23 56C17 59 9 57 7 51Z" fill="${W}" stroke="${K}" stroke-width="0.7"/>` +
-    `<path d="M11 49C14 46 18 45 22 46M12 52C15 50 19 49 23 50" stroke="${K}" stroke-width="0.5" fill="none"/>` +
-    `<path d="M24 44C27 36 24 28 23 21C22.5 17 24 14 26.5 13.6" stroke="${K}" stroke-width="2.6" fill="none" stroke-linecap="round"/>` +
-    `<path d="M24 44C27 36 24 28 23 21C22.5 17 24 14 26.5 13.6" stroke="${W}" stroke-width="1.4" fill="none" stroke-linecap="round"/>` +
-    `<circle cx="27" cy="13.6" r="1.9" fill="${W}" stroke="${K}" stroke-width="0.6"/><circle cx="26.6" cy="12.4" r="0.9" fill="${R}"/>` +
-    `<path d="M28.6 13.4L33.5 14.6L28.6 14.6Z" fill="${K}"/><circle cx="27.4" cy="13.5" r="0.35" fill="${K}"/>` +
-    `<path d="M15 57L14 77M20 57.5L21 77M14 77h-2.4M21 77h2.4" stroke="${K}" stroke-width="0.8"/>` +
-    gwang(41, 71);
-  ART[1] = ridge([[-1, 52], [6, 40], [11, 33], [16, 42], [22, 52], [28, 42], [33, 32], [38, 40], [43, 48], [47, 42], [51, 38]], [[11, 33], [33, 32], [47, 42, 1.3]]) +
-    hong(6, 5, -10);
-  ART[2] = ridge([[-1, 40], [5, 28], [10, 18], [15, 28], [20, 40], [25, 30], [30, 20], [35, 30], [40, 40], [45, 30], [51, 22]], [[10, 18], [30, 20], [45, 30, 1.3], [20, 40, 1.2]]);
-  ART[3] = ridge([[-1, 14], [5, 22], [10, 32], [15, 44], [20, 56], [25, 62], [30, 54], [35, 42], [40, 30], [45, 20], [51, 12]], [[25, 62, 1.3], [5, 22, 1.2], [45, 20, 1.2]]);
-
+  ART[0] = bg(SKY) + `<circle cx="36" cy="15" r="10" fill="${RD}"/><circle cx="32.5" cy="11.5" r="2.6" fill="${RD2}"/>` + humps([[40, 54, 13], [10, 62, 13]]) + crane + gwang(41, 71);
+  ART[1] = bg(SKY) + humps([[12, 50, 14], [38, 44, 14], [26, 62, 11]]) + hong(9, 6, -12) + cloud(32, 14, 1);
+  ART[2] = bg(SKY) + humps([[10, 40, 13], [38, 32, 14], [24, 52, 12]]) + cloud(6, 14, 0.9);
+  ART[3] = bg(SKY) + humps([[38, 42, 13], [12, 34, 14], [26, 56, 12]]) + cloud(32, 12, 0.9);
   // 2월 매조
-  const plumBranch = `<path d="M-2 58C10 52 18 48 26 40C32 34 40 30 52 26" stroke="${K}" stroke-width="3.4" fill="none" stroke-linecap="round"/><path d="M26 40C24 32 22 26 22 18M36 33C40 40 42 46 44 54" stroke="${K}" stroke-width="1.6" fill="none"/>`;
-  ART[4] = plumBranch + songbird(24, 23, 1.15, 1, TL, Y, B) + plum(8, 66, 5.5) + plum(20, 72, 5) + plum(36, 62, 5.2, 20) + plum(44, 54, 4) + plum(42, 14, 4.5) + bud(30, 70, 1.6) + bud(14, 58, 1.4) + bud(46, 72, 1.6) + bud(36, 8, 1.3);
-  ART[5] = `<path d="M-2 66C12 58 24 54 52 50" stroke="${K}" stroke-width="3" fill="none"/><path d="M30 54C32 46 34 40 38 34" stroke="${K}" stroke-width="1.4" fill="none"/>` +
-    plum(10, 14, 5.5) + plum(38, 30, 5) + plum(40, 46, 4.5) + plum(10, 58, 4.8) + plum(28, 68, 5.2) + plum(44, 66, 5) + bud(42, 18, 1.5) + bud(18, 64, 1.4) + bud(20, 22, 1.4) +
-    hong(17, 6, -6);
-  ART[6] = `<path d="M10 -2C11 14 9 30 14 46M24 -2C24 16 26 30 22 50M36 -2C38 14 34 26 40 44" stroke="${K}" stroke-width="1.7" fill="none"/>` +
-    plum(14, 50, 5.2) + plum(26, 58, 5.6) + plum(38, 50, 5) + plum(18, 68, 5) + plum(34, 70, 5.2) + plum(44, 62, 4) + plum(8, 62, 4.2) +
-    bud(14, 34, 1.4) + bud(24, 38, 1.5) + bud(38, 30, 1.4) + bud(26, 76, 1.4);
-  ART[7] = `<path d="M30 -2C30 14 28 22 32 34M40 -2C42 12 44 20 42 36M18 -2C20 10 18 20 22 30" stroke="${K}" stroke-width="1.7" fill="none"/><path d="M-2 66C14 60 26 58 40 54" stroke="${K}" stroke-width="2.6" fill="none"/>` +
-    plum(32, 38, 5) + plum(44, 40, 4.5) + plum(20, 34, 4.6) + plum(12, 50, 5.4) + plum(26, 50, 5) + plum(40, 54, 4.8) + plum(16, 68, 5) + plum(34, 70, 5) +
-    bud(32, 22, 1.4) + bud(42, 24, 1.4) + bud(46, 70, 1.4);
-
+  ART[4] = branch('M-2 60C12 54 22 48 30 42C38 36 44 34 52 32', 3) + roundBird(24, 33, 1, GN, YL, GN2) +
+    flower5(8, 70, 5.2, RD) + flower5(21, 74, 4.6, RD) + flower5(37, 66, 5, RD) + flower5(45, 53, 4, RD) + flower5(42, 13, 4.6, RD) + flower5(30, 18, 3.4, RD) + flower5(9, 36, 3.8, RD) +
+    dot(30, 76, 1.5, RD) + dot(14, 62, 1.4, RD) + dot(47, 72, 1.5, RD);
+  ART[5] = branch('M-2 68C14 62 28 58 52 54', 3) + branch('M30 59C33 50 36 44 40 38', 1.6) +
+    flower5(10, 58, 4.6, RD) + flower5(26, 68, 5, RD) + flower5(42, 64, 4.8, RD) + flower5(40, 34, 4.4, RD) + flower5(36, 14, 4.6, RD) + flower5(44, 24, 3.6, RD) + dot(18, 64, 1.4, RD) + dot(46, 46, 1.4, RD) +
+    hong(14, 6, -8);
+  ART[6] = branch('M12 -2C12 14 10 30 14 46M26 -2C26 16 28 30 24 50M38 -2C40 14 36 26 40 44', 1.8) +
+    flower5(14, 50, 5, RD) + flower5(26, 58, 5.4, RD) + flower5(38, 50, 4.8, RD) + flower5(18, 69, 4.8, RD) + flower5(34, 70, 5, RD) + flower5(45, 62, 3.8, RD) + flower5(7, 61, 4, RD) +
+    dot(14, 34, 1.4, RD) + dot(24, 38, 1.5, RD) + dot(39, 30, 1.4, RD);
+  ART[7] = branch('M-2 66C14 60 26 58 40 54M32 -2C32 14 30 22 33 34M42 -2C44 12 46 20 43 36', 2.2) +
+    flower5(33, 38, 4.8, RD) + flower5(44, 40, 4.2, RD) + flower5(12, 50, 5.2, RD) + flower5(26, 50, 4.8, RD) + flower5(40, 55, 4.6, RD) + flower5(16, 68, 4.8, RD) + flower5(34, 70, 4.8, RD) +
+    dot(33, 22, 1.4, RD) + dot(43, 24, 1.4, RD) + dot(46, 70, 1.4, RD);
   // 3월 벚꽃
-  ART[8] = cherry(10, 10, 6.5, R) + cherry(24, 8, 6, PK, 20) + cherry(38, 12, 6.5, R, 10) + cherry(16, 24, 6, PK, 30) + cherry(32, 26, 6.5, R, 40) + cherry(45, 28, 5, PK) + cherry(5, 34, 5, R) +
-    `<rect x="0" y="40" width="50" height="6" fill="${K}"/>` +
-    [3, 9, 15, 21, 27, 33, 39, 45].map((x) => `<rect x="${x - 1.4}" y="41.6" width="2.8" height="2.8" fill="${B}" stroke="${W}" stroke-width="0.4"/>`).join('') +
-    [6, 12, 18, 24, 30, 36, 42].map((x) => `<path d="M${x - 1} 42l2 2m0 -2l-2 2" stroke="${R}" stroke-width="0.6"/>`).join('') +
-    `<path d="M0 46H50V62C44 66 38 62 32 65C26 68 20 62 14 66C8 69 4 64 0 66Z" fill="${K}"/>` +
-    `<path d="M0 66C4 64 8 69 14 66C20 62 26 68 32 65C38 62 44 66 50 62V80H0Z" fill="${R}"/>` +
-    `<path d="M0 70C10 66 30 74 50 68" stroke="${K}" stroke-width="0.6" fill="none"/>` + gwang(9, 70);
-  ART[9] = `<path d="M-2 78C8 66 14 58 22 46C28 38 36 28 52 20" stroke="${K}" stroke-width="3.4" fill="none"/>` +
-    cherry(8, 12, 6, PK) + cherry(40, 10, 6.5, R) + cherry(10, 30, 6, R, 30) + cherry(36, 34, 6.5, PK) + cherry(42, 50, 5.5, R) + cherry(12, 52, 6, PK, 10) + cherry(30, 66, 6, R) + cherry(44, 70, 5, PK) + cherry(6, 70, 5, R) +
-    hong(18, 8, -8);
-  ART[10] = `<path d="M-2 76C10 64 18 56 22 44C26 34 22 22 30 10M22 44C30 40 38 42 48 36" stroke="${K}" stroke-width="3.2" fill="none"/>` +
-    cherry(10, 10, 6.5, R) + cherry(24, 12, 6, PK, 20) + cherry(40, 14, 6.5, R) + cherry(14, 28, 6, PK) + cherry(34, 28, 6.5, R, 30) + cherry(8, 46, 6, R) + cherry(44, 44, 5.5, PK) + cherry(32, 52, 6, R, 10) + cherry(16, 62, 5.5, PK) + cherry(40, 66, 5.5, R);
-  ART[11] = `<path d="M52 72C40 62 34 56 30 46C26 34 30 22 22 8M30 46C22 42 12 44 2 38" stroke="${K}" stroke-width="3.2" fill="none"/>` +
-    cherry(10, 12, 6, PK) + cherry(30, 10, 6.5, R) + cherry(42, 22, 6, PK, 20) + cherry(12, 30, 6.5, R, 10) + cherry(28, 30, 5.5, PK) + cherry(42, 42, 6, R) + cherry(8, 50, 6, PK) + cherry(22, 56, 6.5, R, 30) + cherry(38, 64, 5.5, PK) + cherry(10, 70, 5.5, R);
-
+  const sakura = (list) => list.map(([x, y, r, k]) => flower5(x, y, r, k ? PK : RD2, k ? RD : YL, true)).join('');
+  ART[8] = sakura([[10, 10, 6, 1], [24, 8, 5.4, 0], [38, 11, 6, 1], [16, 24, 5.4, 0], [32, 25, 6, 1], [45, 26, 4.6, 0], [5, 33, 4.6, 1]]) +
+    `<rect x="0" y="39" width="50" height="7" fill="${NV}"/>` + [4, 10, 16, 22, 28, 34, 40, 46].map((x) => dot(x, 42.5, 1.3, YL)).join('') +
+    `<path d="M0 46H50V64C44 68 38 62 32 66C26 70 20 62 14 66C8 70 4 64 0 66Z" fill="${RD}"/><path d="M0 66C4 64 8 70 14 66C20 62 26 70 32 66C38 62 44 68 50 64V82H0Z" fill="${RD2}"/>` +
+    [10, 25, 40].map((x) => `<path d="M${x} 46V64" stroke="${WH}" stroke-width="0.6" opacity="0.4"/>`).join('') + gwang(9, 71);
+  ART[9] = branch('M-2 78C8 66 14 58 22 46C28 38 36 28 52 20', 3) + sakura([[8, 12, 5.4, 1], [40, 10, 6, 0], [10, 30, 5.4, 0], [36, 34, 6, 1], [42, 50, 5, 0], [12, 52, 5.4, 1], [30, 66, 5.4, 0], [44, 70, 4.6, 1], [6, 70, 4.6, 0]]) + hong(18, 8, -8);
+  ART[10] = branch('M-2 76C10 64 18 56 22 44C26 34 22 22 30 10M22 44C30 40 38 42 48 36', 3) + sakura([[10, 10, 6, 0], [24, 12, 5.4, 1], [40, 14, 6, 0], [14, 28, 5.4, 1], [34, 28, 6, 0], [8, 46, 5.4, 0], [44, 44, 5, 1], [32, 52, 5.4, 0], [16, 62, 5, 1], [40, 66, 5, 0]]);
+  ART[11] = branch('M52 72C40 62 34 56 30 46C26 34 30 22 22 8M30 46C22 42 12 44 2 38', 3) + sakura([[10, 12, 5.4, 1], [30, 10, 6, 0], [42, 22, 5.4, 1], [12, 30, 6, 0], [28, 30, 5, 1], [42, 42, 5.4, 0], [8, 50, 5.4, 1], [22, 56, 6, 0], [38, 64, 5, 1], [10, 70, 5, 0]]);
   // 4월 흑싸리
-  const kStems = (dir) => [8, 16, 24, 32, 40].map((x, i) => dir > 0
-    ? stem(x + 2, 82, x - 2 + (i % 2) * 4, 50, x + (i % 2 ? 3 : -3), 18 + (i % 3) * 6, 7, 4.6, [K])
-    : stem(x + 2, -2, x + (i % 2) * 4, 30, x + (i % 2 ? 4 : -2), 62 - (i % 3) * 6, 7, 4.6, [K]));
-  ART[12] = flyer(26, 16, 1.25, -18, Y, Y, R) + cloud(4, 74, 0.9) +
-    stem(4, 82, 6, 60, 14, 40, 6, 4.6, [K]) + stem(14, 82, 18, 64, 24, 50, 5, 4.4, [K]) + stem(28, 82, 30, 70, 36, 58, 4, 4.2, [K]) + stem(42, 82, 44, 72, 46, 62, 3, 4, [K]) +
-    `<path d="M14 40c2 -2 4 -1 3 1M24 50c2 -2 4 -1 3 1" stroke="${K}" stroke-width="0.5" fill="none"/>`;
-  ART[13] = kStems(1).slice(0, 4).join('') + cho(16, 4, 14);
-  ART[14] = kStems(-1).join('') + `<path d="M12 64c2 2 1 4 -1 3M30 58c2 2 1 4 -1 3" stroke="${K}" stroke-width="0.5" fill="none"/>`;
-  ART[15] = kStems(1).join('');
-
-  // 5월 난초
-  ART[16] = cloud(30, 9, 1.2) + iris(13, 18, 1.75) + iris(30, 12, 1.4) +
-    swords([[30, 56, 6], [38, 66, -4], [46, 50, 4], [24, 44, -6, 5], [42, 40, 8, 5]]) +
-    `<path d="M-2 66C10 62 20 66 30 64C38 62 44 64 52 62V82H-2Z" fill="${B}"/><path d="M2 70q3 -1.6 6 0t6 0t6 0t6 0t6 0t6 0t6 0t6 0M0 76q3 -1.6 6 0t6 0t6 0t6 0t6 0t6 0t6 0t6 0" stroke="${W}" stroke-width="0.55" fill="none"/>` +
-    `<path d="M-2 52L30 46L31 51L-2 58Z" fill="${Y}" stroke="${K}" stroke-width="0.6"/><path d="M14 60L46 54L47 59L14 66Z" fill="${Y}" stroke="${K}" stroke-width="0.6"/>` +
-    `<path d="M5 52.2L5.6 57M12 50.8L12.6 55.6M19 49.4L19.6 54.2M26 48L26.6 52.8M22 59L22.6 63.8M30 57.4L30.6 62.2M38 56L38.6 60.8" stroke="${K}" stroke-width="0.45"/>` +
-    `<rect x="27" y="44" width="4" height="22" fill="${Y}" stroke="${K}" stroke-width="0.6"/><rect x="12" y="56" width="4" height="20" fill="${Y}" stroke="${K}" stroke-width="0.6"/><rect x="42" y="52" width="4" height="18" fill="${Y}" stroke="${K}" stroke-width="0.6"/>`;
-  ART[17] = iris(10, 40, 1.5) + swords([[4, 52, -4], [11, 64, 5], [18, 46, -7], [24, 72, 4], [30, 54, -5], [36, 68, 6], [43, 50, -3], [48, 62, 2]]) + cho(14, 4, 16);
-  ART[18] = iris(15, 15, 1.8) + iris(35, 26, 1.55) + swords([[4, 50, -5], [10, 60, 4], [17, 44, -6], [23, 66, 3], [29, 50, -4], [35, 58, 5], [42, 46, -3], [47, 60, 2]]);
-  ART[19] = iris(33, 13, 1.75) + iris(14, 28, 1.55) + swords([[4, 56, 4], [10, 46, -5], [16, 64, 4], [22, 50, -6], [28, 60, 3], [34, 44, -4], [40, 62, 5], [47, 50, -3]]);
-
+  const cuckoo = flyBird(28, 18, 1.1, -12, OR, YL, YL2, NV);
+  ART[12] = bg(CR) + cuckoo + cloud(4, 72, 1.1, PK2) +
+    sprig(6, 84, 8, 66, 14, 46, 5, 6.4, [NV, NV2]) + sprig(20, 84, 22, 70, 30, 56, 4, 6, [NV2, NV]) + sprig(36, 84, 38, 74, 44, 62, 3, 5.6, [NV, NV2]);
+  ART[13] = hang(8, 62, 3, 6, 3.4) + hang(18, 72, -2, 7, 3.4) + hang(30, 56, 3, 5, 3.2) + hang(42, 70, -3, 7, 3.4) + cho(20, 4, 14);
+  ART[14] = hang(6, 58, 3, 6, 3.4) + hang(16, 72, -2, 7, 3.4) + hang(26, 64, 3, 6, 3.4) + hang(36, 74, -3, 7, 3.4) + hang(46, 60, 2, 6, 3.2);
+  ART[15] = hang(8, 70, -3, 7, 3.4) + hang(19, 60, 3, 6, 3.4) + hang(30, 74, -2, 7, 3.4) + hang(41, 64, 3, 6, 3.4);
+  // 5월 난초 (붓꽃)
+  ART[16] = bg(CR) + cloud(30, 10, 1.1, PK2) + iris(13, 18, 1.5) + iris(30, 22, 1.2) + blades([[34, 50, 4], [42, 60, -3], [47, 44, 2]]) + water(64) +
+    `<rect x="-2" y="50" width="34" height="5.4" rx="2.7" fill="${YL}" transform="rotate(-8 15 52)"/><rect x="14" y="58" width="36" height="5.4" rx="2.7" fill="${YL}" transform="rotate(-8 32 60)"/>` +
+    `<rect x="26" y="46" width="4" height="22" rx="2" fill="${OR}"/><rect x="11" y="56" width="4" height="20" rx="2" fill="${OR}"/><rect x="41" y="54" width="4" height="18" rx="2" fill="${OR}"/>`;
+  ART[17] = blades([[4, 52, -4], [11, 64, 5], [18, 46, -7], [24, 72, 4], [30, 54, -5], [36, 68, 6], [43, 50, -3], [48, 62, 2]]) + iris(12, 36, 1.3) + cho(16, 4, 16);
+  ART[18] = blades([[4, 50, -5], [10, 60, 4], [17, 44, -6], [23, 66, 3], [29, 50, -4], [35, 58, 5], [42, 46, -3], [47, 60, 2]]) + iris(14, 16, 1.5) + iris(34, 26, 1.3);
+  ART[19] = blades([[4, 56, 4], [10, 46, -5], [16, 64, 4], [22, 50, -6], [28, 60, 3], [34, 44, -4], [40, 62, 5], [47, 50, -3]]) + iris(33, 14, 1.5) + iris(14, 28, 1.3);
   // 6월 모란
-  const mLeaves = (list) => list.map(([x, y, r, rot]) => maple(x, y, r, K, rot)).join('');
-  const butterfly = (x, y, s, rot) => `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${s})"><path d="M0 0C-3 -6 -9 -6 -9 -1C-9 2 -4 2 0 0C-3 3 -6 7 -3 8C0 8 1 4 0 0Z" fill="${Y}" stroke="${K}" stroke-width="0.45"/><path d="M0 0C3 -6 9 -6 9 -1C9 2 4 2 0 0C3 3 6 7 3 8C0 8 -1 4 0 0Z" fill="${Y}" stroke="${K}" stroke-width="0.45"/><circle cx="-5" cy="-2" r="1.1" fill="${R}"/><circle cx="5" cy="-2" r="1.1" fill="${R}"/><path d="M-0.5 -1L-2 -6M0.5 -1L2 -6" stroke="${K}" stroke-width="0.4"/><ellipse rx="0.8" ry="3" fill="${K}"/></g>`;
-  ART[20] = mLeaves([[8, 12, 9, -30], [42, 10, 9, 30], [7, 34, 9, -110], [43, 34, 9, 110], [25, 40, 7, 180]]) + peony(25, 22, 12) +
-    butterfly(14, 60, 1.25, -14) + butterfly(36, 64, 1.1, 16) + cloud(2, 78, 1.3) + cloud(30, 79, 1.1);
-  ART[21] = mLeaves([[38, 14, 9, 25], [10, 50, 9, -50], [46, 48, 8, 50], [14, 74, 9, -130], [44, 74, 8, 130], [30, 42, 7, 0]]) + peony(29, 60, 12) + cheong(8, 6, -14);
-  ART[22] = mLeaves([[10, 12, 8, -40], [40, 10, 8, 40], [24, 34, 6.5, 180], [8, 50, 9, -70], [44, 52, 9, 70], [12, 74, 9, -140], [42, 76, 9, 140]]) + peony(25, 20, 9) + peony(27, 60, 12);
-  ART[23] = mLeaves([[8, 26, 10, -50], [43, 24, 10, 50], [24, 16, 8, 0], [8, 62, 10, -120], [43, 64, 10, 120], [26, 74, 8, 180]]) + peony(25, 44, 13.5);
-
+  const leaves = (list) => list.map(([x, y, s, r], i) => blobLeaf(x, y, s, r, i % 2 ? GN2 : GN)).join('');
+  ART[20] = leaves([[14, 24, 0.95, -60], [36, 24, 0.95, 60], [18, 38, 0.85, -130], [33, 38, 0.85, 130]]) + peony(25, 22, 11) + butterfly(14, 60, 1.2, -14) + butterfly(36, 66, 1, 16) + cloud(2, 76, 1.2, PK2) + cloud(30, 77, 1, PK2);
+  ART[21] = leaves([[17, 54, 0.95, -50], [39, 52, 0.95, 50], [18, 71, 0.9, -130], [38, 72, 0.9, 130], [38, 30, 0.8, 25]]) + peony(28, 62, 10.5) + cheong(8, 6, -14);
+  ART[22] = leaves([[14, 24, 0.85, -55], [36, 22, 0.85, 55], [14, 62, 0.95, -55], [42, 60, 0.95, 55], [16, 76, 0.85, -130], [40, 76, 0.85, 130]]) + peony(25, 20, 8.5) + peony(28, 62, 10.5);
+  ART[23] = leaves([[10, 38, 1, -55], [40, 36, 1, 55], [12, 56, 1, -125], [40, 56, 1, 125], [26, 30, 0.85, 0]]) + peony(25, 46, 12) + dot(10, 14, 1.2, PK) + dot(42, 70, 1.2, PK);
   // 7월 홍싸리
-  ART[24] = bush(52, -2, 32, 10, 16, 36, 8, 6.5) + bush(52, 18, 38, 28, 26, 50, 6, 6) + bush(28, -2, 22, 12, 6, 26, 6, 5.5) +
-    `<g transform="translate(20 64) scale(1.12)"><path d="M-14 0C-14 -6 -8 -10 0 -10C8 -10 13 -6 14 -2L17 -1L14 1C13 4 8 6 0 6C-8 6 -14 4 -14 0Z" fill="${Y}" stroke="${K}" stroke-width="0.7"/>` +
-    `<path d="M-10 -7C-6 -9 -2 -9 2 -9M-12 -3C-6 -6 2 -6 8 -6M-12 2C-6 0 2 0 8 0" stroke="${K}" stroke-width="0.5" fill="none"/><path d="M-10 5L-13 11M-5 6L-4 12M5 6L4 12M10 4L13 10" stroke="${K}" stroke-width="1.6" stroke-linecap="round"/>` +
-    `<circle cx="10" cy="-4" r="0.8" fill="${K}"/><path d="M13 -6L15 -9L15 -5Z" fill="${K}"/><path d="M15 0l2 -1" stroke="${W}" stroke-width="0.8"/><path d="M-14 -2L-17 -4" stroke="${K}" stroke-width="0.8"/></g>`;
-  ART[25] = bush(-2, 82, 8, 44, 30, 10, 9, 6.5) + bush(10, 82, 26, 52, 48, 26, 8, 6.5) + bush(30, 82, 40, 66, 52, 48, 5, 6) + cho(16, 4, 16);
-  ART[26] = bush(-2, 80, 12, 40, 40, 6, 10, 7) + bush(12, 82, 30, 54, 50, 30, 8, 6.5) + bush(-2, 50, 4, 30, 16, 10, 5, 5.5);
-  ART[27] = bush(52, 80, 38, 40, 10, 6, 10, 7) + bush(38, 82, 20, 54, 0, 30, 8, 6.5) + bush(52, 50, 46, 30, 34, 10, 5, 5.5);
-
+  ART[24] = sprig(52, -2, 32, 10, 16, 34, 7, 6, [RD, BR, RD]) + sprig(52, 18, 38, 28, 26, 46, 5, 5.6, [RD, RD, BR]) + sprig(28, -2, 22, 12, 6, 24, 5, 5.2, [BR, RD]) +
+    `<g transform="translate(23 62)"><ellipse rx="15" ry="10" fill="${OR}"/><ellipse cx="-2" cy="2" rx="10" ry="6" fill="${OR2}"/>` +
+    `<path d="M-14 -4L-18 -6L-16 -1Z" fill="${OR}"/><path d="M4 -9L6 -14L9 -9Z" fill="${OR}"/>` +
+    `<ellipse cx="14" cy="1" rx="4" ry="3.4" fill="#f07c7c"/><circle cx="13" cy="0.6" r="0.6" fill="${NV}"/><circle cx="15.2" cy="0.6" r="0.6" fill="${NV}"/>` + eye(8, -3, 1.2) + cheek(9.4, 2) +
+    `<path d="M-9 9V14M-3 9.6V14.4M4 9.6V14.4M10 8.6V13.4" stroke="${BR}" stroke-width="2.4" stroke-linecap="round"/></g>`;
+  ART[25] = sprig(-2, 84, 8, 44, 30, 10, 8, 6.2, [RD, BR, RD]) + sprig(10, 84, 26, 52, 48, 26, 7, 6, [RD, RD, BR]) + sprig(30, 84, 40, 66, 52, 48, 4, 5.6, [BR, RD]) + cho(16, 4, 16);
+  ART[26] = sprig(-2, 82, 12, 40, 40, 6, 9, 6.4, [RD, BR, RD]) + sprig(12, 84, 30, 54, 50, 30, 7, 6, [RD, RD, BR]) + sprig(-2, 50, 4, 30, 16, 10, 4, 5.2, [BR, RD]);
+  ART[27] = sprig(52, 82, 38, 40, 10, 6, 9, 6.4, [RD, BR, RD]) + sprig(38, 84, 20, 54, 0, 30, 7, 6, [RD, RD, BR]) + sprig(52, 50, 46, 30, 34, 10, 4, 5.2, [BR, RD]);
   // 8월 공산
-  ART[28] = `<rect x="0" y="0" width="50" height="56" fill="${R}"/><circle cx="25" cy="24" r="13.5" fill="${W}"/>` +
-    `<path d="M-1 54C12 44 30 42 51 50V82H-1Z" fill="${K}"/>` + gwang(10, 70);
-  ART[29] = flyer(14, 14, 0.85, 12, Y, R, R) + flyer(34, 10, 0.75, -6, Y, R, R) + flyer(24, 26, 0.8, 4, Y, R, R) +
-    `<path d="M-1 48C14 40 32 40 51 46V82H-1Z" fill="${K}"/>`;
-  ART[30] = `<path d="M-1 50C16 42 34 42 51 48V82H-1Z" fill="${K}"/>`;
-  ART[31] = `<path d="M-1 52C14 44 34 44 51 50V82H-1Z" fill="${K}"/>`;
-
+  const night = bg(NV) + dot(8, 10, 0.7, YL) + dot(44, 8, 0.6, YL) + dot(42, 40, 0.7, YL) + dot(6, 44, 0.6, YL2);
+  ART[28] = night + `<circle cx="25" cy="25" r="16" fill="${NV2}"/><circle cx="25" cy="25" r="12.5" fill="${CR}"/><circle cx="21" cy="21" r="2.4" fill="#f3e8cf"/><circle cx="29" cy="28" r="1.6" fill="#f3e8cf"/>` +
+    `<path d="M-2 58C12 48 30 48 52 54V84H-2Z" fill="#171c30"/>` + gwang(10, 71);
+  ART[29] = night + flyBird(14, 16, 0.75, 8, WH, '#dfe7ee', WH) + flyBird(34, 12, 0.7, -4, WH, '#dfe7ee', WH) + flyBird(25, 30, 0.72, 4, WH, '#dfe7ee', WH) + `<path d="M-2 50C12 42 32 42 52 48V84H-2Z" fill="#171c30"/>`;
+  ART[30] = night + dot(24, 20, 0.7, YL) + dot(36, 26, 0.5, YL2) + `<path d="M-2 52C14 44 34 44 52 50V84H-2Z" fill="#171c30"/>`;
+  ART[31] = night + dot(18, 26, 0.6, YL2) + dot(30, 14, 0.7, YL) + `<path d="M-2 54C12 46 34 46 52 52V84H-2Z" fill="#171c30"/>`;
   // 9월 국진
-  ART[32] = blob(14, 58, 12, 8, 2) + chrys(16, 24, 9, R, Y) + cloud(30, 8, 1.1) +
-    `<path d="M0 62L50 56V80H0Z" fill="${B}"/><path d="M4 70q4 -2 8 0t8 0t8 0t8 0t8 0M2 76q4 -2 8 0t8 0t8 0t8 0t8 0" stroke="${W}" stroke-width="0.6" fill="none"/>` +
-    `<g transform="translate(34 46) rotate(-20)"><ellipse rx="12" ry="7" fill="${R}" stroke="${K}" stroke-width="0.7"/><ellipse cy="-2" rx="9" ry="3.5" fill="#b81d15" stroke="${K}" stroke-width="0.5"/>` +
-    `<text x="0" y="4.4" font-size="7.4" text-anchor="middle" fill="${Y}" font-weight="700" font-family="'Noto Serif CJK KR','Batang',serif">壽</text></g>`;
-  ART[33] = blob(30, 60, 14, 9, 3) + blob(10, 72, 8, 6, 1) + chrys(32, 52, 8, Y, R) + `<path d="M30 30L30 44" stroke="${K}" stroke-width="0.8"/>` + chrys(32, 22, 7, R, Y) + cheong(6, 6, -6);
-  ART[34] = `<path d="M24 22L22 48" stroke="${K}" stroke-width="0.9"/>` + blob(24, 58, 16, 9, 4) + blob(10, 40, 8, 6, 2) + chrys(24, 16, 9, R, Y) + chrys(28, 50, 7, Y, R);
-  ART[35] = `<path d="M24 24L26 44" stroke="${K}" stroke-width="0.9"/>` + blob(22, 62, 15, 9, 5) + blob(40, 44, 8, 6, 3) + chrys(26, 18, 9, Y, R) + chrys(22, 52, 7.5, R, Y);
-
+  ART[32] = puff(14, 56, 10) + chrys(16, 24, 8.5) + cloud(30, 8, 1.1, PK2) + water(62) +
+    `<g transform="translate(34 46) rotate(-16)"><ellipse rx="11" ry="6.6" fill="${RD}"/><ellipse cy="-2" rx="8.4" ry="3.2" fill="${RD2}"/><text x="0" y="4.2" font-size="7" text-anchor="middle" fill="${YL}" font-weight="700" font-family="'Noto Serif CJK KR','Batang',serif">壽</text></g>`;
+  ART[33] = puff(30, 60, 12) + puff(10, 72, 7) + branch('M30 30L30 46', 1.2, GN2) + chrys(32, 52, 7.5, YL, OR) + chrys(32, 22, 7, OR, YL) + cheong(6, 6, -6);
+  ART[34] = branch('M24 22L22 48', 1.2, GN2) + puff(24, 60, 14) + puff(10, 40, 7) + chrys(24, 16, 8.5) + chrys(28, 50, 6.5, YL, OR);
+  ART[35] = branch('M24 24L26 44', 1.2, GN2) + puff(22, 64, 13) + puff(40, 46, 7) + chrys(26, 18, 8.5, YL, OR) + chrys(22, 54, 7);
   // 10월 단풍
-  ART[36] = `<path d="M38 82C36 62 40 44 52 30V82Z" fill="${Y}" stroke="${K}" stroke-width="0.6"/><path d="M41 80C40 66 42 52 50 40M45 80C44 68 46 56 52 48" stroke="${K}" stroke-width="0.5" fill="none"/>` +
-    maple(10, 11, 9, R, 10) + maple(27, 9, 8, K, -20) + maple(43, 15, 9, R, 25) + maple(46, 36, 7, K) + maple(34, 30, 6, R, -10) +
-    `<g transform="translate(20 54) scale(1.12)"><path d="M-10 -2C-10 -6 -4 -8 2 -8C6 -8 8 -6 8 -3C8 1 4 3 -2 3C-6 3 -10 2 -10 -2Z" fill="${Y}" stroke="${K}" stroke-width="0.7"/>` +
-    `<path d="M5 -6C6 -12 8 -16 10 -18L14 -17L12 -14C10 -12 9 -8 8 -4Z" fill="${Y}" stroke="${K}" stroke-width="0.7"/>` +
-    `<path d="M11 -17L10 -23M10 -21L7 -24M10 -21L12 -25M12 -17L14 -22M14 -21L17 -23" stroke="${K}" stroke-width="0.7" fill="none"/><circle cx="12" cy="-15.5" r="0.5" fill="${K}"/>` +
-    `<path d="M-8 2L-9 20M-4 3L-4 20M3 3L3 20M6 2L8 20" stroke="${K}" stroke-width="1.3"/><path d="M-6 -5l3 3M-1 -6l3 3M3 -6l2 3" stroke="${K}" stroke-width="0.45"/>` +
-    `<path d="M-10 -3L-13 -5L-11 -1Z" fill="${Y}" stroke="${K}" stroke-width="0.4"/></g>`;
-  ART[37] = maple(36, 13, 10, R, 20) + maple(40, 35, 9, K, -10) + maple(15, 50, 10, R) + maple(37, 58, 10, K, 30) + maple(13, 73, 9, K, 20) + maple(40, 77, 9, R, -20) + cheong(8, 6, -6);
-  ART[38] = maple(12, 12, 10, R) + maple(38, 12, 9, K, 20) + maple(25, 32, 11, R, -15) + maple(8, 46, 9, K, 30) + maple(43, 42, 9, R) + maple(25, 58, 10, K, 10) + maple(10, 72, 9, R, -30) + maple(41, 71, 10, R, 15);
-  ART[39] = maple(12, 12, 10, K, 15) + maple(38, 14, 10, R) + maple(24, 34, 11, K, -15) + maple(43, 42, 9, R, 20) + maple(8, 50, 9, R, 30) + maple(28, 58, 10, R, 10) + maple(12, 72, 9, K, -20) + maple(40, 74, 9, K);
-
+  const mcols = [RD, OR, YL, RD2];
+  const maples = (list) => list.map(([x, y, r, rot], i) => maple(x, y, r, mcols[i % mcols.length], rot)).join('');
+  ART[36] = maples([[10, 11, 8, 10], [27, 9, 7, -20], [43, 15, 8, 25], [44, 36, 6.4, 0]]) +
+    `<g transform="translate(22 54)"><ellipse rx="10" ry="6.4" fill="${OR2}"/><ellipse cx="-1" cy="2" rx="6" ry="3.4" fill="${YL2}"/>` +
+    `<path d="M5 -3C6 -9 7 -12 9 -14" stroke="${OR2}" stroke-width="4.2" stroke-linecap="round"/><circle cx="10" cy="-16" r="4.4" fill="${OR2}"/>` +
+    `<path d="M8 -20C7 -24 5 -25 3 -26M7 -22L5 -21M12 -20C13 -24 15 -25 17 -26M13 -22L15 -21" stroke="${BR}" stroke-width="1" fill="none" stroke-linecap="round"/>` +
+    `<ellipse cx="6.6" cy="-19" rx="1.6" ry="1" fill="${OR}"/><ellipse cx="13.4" cy="-19" rx="1.6" ry="1" fill="${OR}"/>` + eye(11, -16.4, 0.9) + cheek(12.6, -14) + `<circle cx="14.2" cy="-15.6" r="0.8" fill="${BR}"/>` +
+    `<path d="M-7 5V16M-3 6V16M3 6V16M7 5V16" stroke="${OR}" stroke-width="2" stroke-linecap="round"/>` + dot(-4, -2, 0.9, WH) + dot(0, -3.4, 0.9, WH) + dot(3, -1.6, 0.9, WH) + `<path d="M-10 -1L-13 -3" stroke="${OR2}" stroke-width="1.6" stroke-linecap="round"/></g>`;
+  ART[37] = maples([[36, 13, 9, 20], [40, 34, 8, -10], [15, 50, 9, 0], [36, 58, 9, 30], [13, 72, 8, 20], [40, 76, 8, -20]]) + cheong(8, 6, -6);
+  ART[38] = maples([[12, 12, 9, 0], [38, 12, 8, 20], [25, 32, 10, -15], [8, 46, 8, 30], [42, 42, 8, 0], [25, 58, 9, 10], [10, 72, 8, -30], [40, 71, 9, 15]]);
+  ART[39] = maples([[12, 12, 9, 15], [38, 14, 9, 0], [24, 34, 10, -15], [42, 42, 8, 20], [8, 50, 8, 30], [28, 58, 9, 10], [12, 72, 8, -20], [40, 74, 8, 0]]);
   // 11월 오동
-  ART[40] = pLeaf(16, 68, 13, 8) + pFlowers(36, 74, 6) + pFlowers(44, 60, 4) +
-    `<path d="M-2 66C-2 46 4 30 16 22C24 17 30 16 34 18L40 28C32 27 24 31 18 39C12 47 9 56 8 66Z" fill="${R}" stroke="${K}" stroke-width="0.7"/>` +
-    `<path d="M2 58C4 46 8 38 14 32M6 62C8 50 12 42 18 36M0 50C2 40 6 32 12 26M8 40l-4 -2M12 34l-4 -3M6 48l-5 -1" stroke="${K}" stroke-width="0.5" fill="none"/>` +
-    `<path d="M24 14C20 8 22 3 26 1C26 5 28 8 30 10M30 12C29 6 32 2 36 1C35 5 36 8 38 10M36 13C37 8 41 5 45 6C42 8 41 11 41 14" fill="${R}" stroke="${K}" stroke-width="0.5"/>` +
-    `<ellipse cx="38" cy="21" rx="8.5" ry="7.5" fill="${R}" stroke="${K}" stroke-width="0.7"/>` +
-    `<circle cx="39" cy="19.5" r="2.8" fill="${Y}" stroke="${K}" stroke-width="0.6"/><circle cx="39.4" cy="19.5" r="1.2" fill="${K}"/>` +
-    `<path d="M45 20L51 24L45 25.4Z" fill="${Y}" stroke="${K}" stroke-width="0.6"/><path d="M32 25C35 27 39 28 43 26" stroke="${K}" stroke-width="0.5" fill="none"/>` +
-    gwang(41, 44);
-  ART[41] = pLeaf(25, 28, 19, 180) + pFlowers(16, 72, 7) + pFlowers(34, 76, 6);
-  ART[42] = pLeaf(25, 54, 19) + pFlowers(18, 26, 7) + pFlowers(34, 20, 6);
-  ART[43] = `<rect x="0" y="64" width="50" height="18" fill="${R}"/>` + pLeaf(25, 50, 17) + pFlowers(17, 22, 7) + pFlowers(34, 18, 6);
-
+  const pflowers = (x, y, sp, up = 1) => [[-sp, -8 * up], [0, -11 * up], [sp, -7 * up]].map(([dx, dy], i) => branch(`M${x} ${y}Q${f(x + dx * 0.3)} ${f(y + dy * 0.6)} ${f(x + dx)} ${f(y + dy)}`, 0.8, GN2) + flower5(f(x + dx), f(y + dy), 3.4 - i * 0.2, BL, WH)).join('');
+  ART[40] = puff(16, 70, 12) + pflowers(36, 76, 6) +
+    `<g transform="translate(24 30)"><path d="M-14 22C-20 10 -16 -4 -4 -10C6 -15 18 -10 18 0C18 8 10 12 4 10C-4 8 -8 14 -8 22Z" fill="${RD}"/>` +
+    `<path d="M-6 -10C-8 -16 -6 -20 -2 -22C-2 -18 0 -15 2 -13M2 -12C2 -18 5 -21 9 -22C8 -18 8 -15 10 -12M9 -10C11 -15 15 -17 19 -16C16 -13 14 -10 14 -7" fill="${OR}"/>` +
+    `<circle cx="6" cy="-2" r="7.6" fill="${RD2}"/>` + eye(8, -3, 1.5) + cheek(10.8, 1.4, 1.1) + `<path d="M13 -1L19 1L13 3Z" fill="${YL}"/>` +
+    `<path d="M-12 8C-8 4 -4 4 0 6M-12 14C-8 10 -4 10 -1 12" stroke="${OR}" stroke-width="1.4" fill="none" stroke-linecap="round"/></g>` + gwang(41, 46);
+  ART[41] = puff(25, 30, 17) + pflowers(15, 76, 7) + pflowers(35, 78, 6);
+  ART[42] = puff(25, 60, 17) + pflowers(18, 30, 7) + pflowers(34, 24, 6);
+  ART[43] = `<rect x="0" y="64" width="50" height="20" fill="${RD}"/><path d="M0 64C8 60 14 66 22 62C30 58 38 64 50 60V66H0Z" fill="${RD}"/>` + puff(25, 50, 15) + pflowers(17, 24, 7) + pflowers(34, 20, 6);
   // 12월 비
-  ART[44] = wbranch(40, 30, 6, 4, 14) + wbranch(48, 24, -2, 3, 12) + wbranch(30, 18, 3, 2, 10) +
-    `<path d="M0 66C12 62 20 70 34 66C40 64 46 66 50 64V80H0Z" fill="${B}"/><path d="M4 72q4 -2 8 0t8 0t8 0t8 0M2 77q4 -2 8 0t8 0t8 0t8 0t8 0" stroke="${W}" stroke-width="0.6" fill="none"/>` +
-    `<path d="M8 28C10 17 26 15 32 24Z" fill="${Y}" stroke="${K}" stroke-width="0.6"/><path d="M20 21L11 27M20 21L16 27M20 21L23 26M20 21L29 25" stroke="${K}" stroke-width="0.4"/><path d="M20 21L21 42" stroke="${B}" stroke-width="1"/>` +
-    `<path d="M15 32C16 30 20 30 21 32L24 52L28 66H12L15 52Z" fill="${R}" stroke="${K}" stroke-width="0.6"/><path d="M15 40L10 46L13 47M21 40L23 46M14 54L26 54" stroke="${K}" stroke-width="0.6" fill="none"/>` +
-    `<circle cx="18" cy="30" r="2.6" fill="${W}" stroke="${K}" stroke-width="0.5"/><path d="M14.8 29h6.4l-3.2 -3.6z" fill="${K}"/><path d="M14 66h4M22 66h4" stroke="${K}" stroke-width="1.2"/>` +
-    `<g transform="translate(9 72)"><ellipse rx="4" ry="2.8" fill="${Y}" stroke="${K}" stroke-width="0.5"/><circle cx="-2" cy="-2.4" r="1" fill="${Y}" stroke="${K}" stroke-width="0.4"/><circle cx="1.6" cy="-2.6" r="1" fill="${Y}" stroke="${K}" stroke-width="0.4"/><path d="M-4 1l-2 2M4 1l2 2" stroke="${K}" stroke-width="0.6"/></g>` +
+  ART[44] = bg(SKY) + willow(42, 30, 3, 4) + willow(48, 22, -1, 3) + willow(34, 18, 2, 3) + water(66) +
+    `<path d="M6 28C8 16 30 14 34 26Z" fill="${YL}"/><path d="M12 27L20 18M20 18L20 27M20 18L28 26" stroke="${OR}" stroke-width="0.6" opacity="0.6"/><path d="M20 19L21 42" stroke="${BR}" stroke-width="1.1"/>` +
+    `<path d="M12 62C12 48 15 38 20 38C25 38 28 48 28 62Z" fill="${RD}"/><path d="M14 52h12" stroke="#c8392e" stroke-width="1.4"/>` +
+    `<circle cx="20" cy="33" r="5.4" fill="${SKIN}"/><path d="M14.6 32C14.6 26 25.4 26 25.4 32Z" fill="${NV}"/>` + eye(18.2, 33.4, 0.8) + eye(21.8, 33.4, 0.8) + cheek(17, 35.6) + cheek(23, 35.6) +
+    `<g transform="translate(8 71)"><ellipse rx="4.6" ry="3.4" fill="${GN}"/><circle cx="-2" cy="-2.8" r="1.6" fill="${GN}"/><circle cx="2" cy="-2.8" r="1.6" fill="${GN}"/>` + eye(-2, -2.8, 0.7) + eye(2, -2.8, 0.7) + `<path d="M-1.4 0.4q1.4 1 2.8 0" stroke="${NV}" stroke-width="0.5" fill="none"/></g>` +
     gwang(9, 9);
-  ART[45] = wbranch(8, 56, 10, 5, 18) + wbranch(22, 40, 6, 4, 16) + wbranch(44, 50, -8, 5, 18) + wbranch(34, 26, 2, 3, 12) + flyer(26, 56, 1.05, -30, Y, Y, R);
-  ART[46] = wbranch(6, 62, 10, 6, 18) + wbranch(20, 36, 4, 3, 14) + wbranch(44, 60, -8, 6, 18) + wbranch(32, 22, 2, 2, 12) + cho(20, 42, -8);
-  ART[47] = `<rect x="0" y="0" width="50" height="80" fill="${K}"/>` +
-    [8, 13, 18, 23, 28, 33, 38, 43].map((x, i) => `<path d="M${x} 13C${x + (i % 2 ? 3 : -3)} 30 ${x + (i % 2 ? -2 : 2)} 50 ${x + (i % 2 ? 2 : -2)} 80" stroke="${R}" stroke-width="0.7" fill="none"/>`).join('') +
-    `<path d="M3 4H47V13H3Z" fill="${R}" stroke="${K}" stroke-width="0.6"/>` +
-    [6, 10, 14, 18, 22, 26, 30, 34, 38, 42].map((x) => `<path d="M${x} 5.4l2.4 6.2" stroke="${K}" stroke-width="0.7"/>`).join('') +
-    `<path d="M3 13H10V80H3ZM40 13H47V80H40Z" fill="${R}" stroke="${K}" stroke-width="0.6"/>` +
-    [18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78].map((y) => `<path d="M3.6 ${y}l5.8 -4M40.6 ${y}l5.8 -4" stroke="${K}" stroke-width="0.6"/>`).join('');
+  ART[45] = bg(SKY) + willow(8, 56, 4, 6) + willow(20, 40, 3, 4) + willow(44, 50, -3, 5) + willow(32, 28, 2, 3) + flyBird(26, 54, 1.1, -24, NV, NV2, WH, OR).replace(`fill="${WH}"/><path d="M-1 1`, `fill="${WH}"/><circle cx="5.4" cy="2.2" r="2" fill="${RD}"/><path d="M-1 1`);
+  ART[46] = bg(SKY) + willow(6, 62, 4, 7) + willow(18, 36, 2, 4) + willow(44, 60, -3, 7) + willow(32, 24, 2, 3) + cho(20, 40, -8);
+  ART[47] = bg(NV) + `<rect x="4" y="6" width="42" height="9" rx="4.5" fill="${RD}"/>` + [10, 18, 26, 34, 42].map((x) => dot(x - 2, 10.5, 1.2, YL)).join('') +
+    `<rect x="6" y="15" width="7" height="66" rx="3.5" fill="${RD}"/><rect x="37" y="15" width="7" height="66" rx="3.5" fill="${RD}"/>` +
+    `<path d="M27 20L19 40H26L20 62L33 36H26L31 20Z" fill="${YL}"/>` + dot(18, 26, 0.7, YL2) + dot(31, 48, 0.7, YL2) + dot(23, 70, 0.7, YL2);
 
-  const FRAME = `<rect width="50" height="80" rx="3.2" fill="${R}"/><rect x="2.4" y="2.4" width="45.2" height="75.2" rx="1.8" fill="${W}"/>`;
+  const FRAME = `<rect width="50" height="80" rx="4" fill="${RD}"/><rect x="1.6" y="1.6" width="46.8" height="76.8" rx="3" fill="${CR}"/>`;
   function sprite() {
-    let s = `<clipPath id="hw-in"><rect x="2.4" y="2.4" width="45.2" height="75.2" rx="1.8"/></clipPath>`;
-    for (let id = 0; id < 48; id++) s += `<g id="hw${id}">${FRAME}<g clip-path="url(#hw-in)">${ART[id]}</g><rect x="2.4" y="2.4" width="45.2" height="75.2" rx="1.8" fill="none" stroke="${K}" stroke-width="0.35"/></g>`;
+    let s = `<clipPath id="hw-in"><rect x="1.6" y="1.6" width="46.8" height="76.8" rx="3"/></clipPath>`;
+    for (let id = 0; id < 48; id++) s += `<g id="hw${id}">${FRAME}<g clip-path="url(#hw-in)">${ART[id]}</g></g>`;
     return s;
   }
   const use = (id) => `<use href="#hw${id}"/>`;
