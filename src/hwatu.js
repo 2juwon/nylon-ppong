@@ -230,9 +230,13 @@
     `<path d="M-6 -10C-8 -16 -6 -20 -2 -22C-2 -18 0 -15 2 -13M2 -12C2 -18 5 -21 9 -22C8 -18 8 -15 10 -12M9 -10C11 -15 15 -17 19 -16C16 -13 14 -10 14 -7" fill="${OR}"/>` +
     `<circle cx="6" cy="-2" r="7.6" fill="${RD2}"/>` + eye(8, -3, 1.5) + cheek(10.8, 1.4, 1.1) + `<path d="M13 -1L19 1L13 3Z" fill="${YL}"/>` +
     `<path d="M-12 8C-8 4 -4 4 0 6M-12 14C-8 10 -4 10 -1 12" stroke="${OR}" stroke-width="1.4" fill="none" stroke-linecap="round"/></g>` + gwang(42, 58);
-  ART[41] = puff(25, 30, 17) + pflowers(15, 76, 7) + pflowers(35, 78, 6);
-  ART[42] = puff(25, 60, 17) + pflowers(18, 30, 7) + pflowers(34, 24, 6);
-  ART[43] = `<rect x="0" y="64" width="50" height="20" fill="${RD}"/><path d="M0 64C8 60 14 66 22 62C30 58 38 64 50 60V66H0Z" fill="${RD}"/>` + puff(25, 50, 15) + pflowers(17, 24, 7) + pflowers(34, 20, 6);
+  // 피·쌍피: 검은 잎 덩어리 윗가장자리에 파란 꽃이 바로 붙고, 그 위로 잎 달린 줄기가 올라감 (참고 이미지 구도)
+  const stems = (list) => list.map(([x0, y0, cx, cy, x1, y1, n]) => sprig(x0, y0, cx, cy, x1, y1, n, 4.2, [NV, NV2], NV)).join('');
+  const blooms = (list) => list.map(([x, y, r]) => flower5(x, y, r, BL, WH)).join('');
+  ART[41] = stems([[20, 44, 18, 32, 14, 22, 4], [28, 42, 30, 30, 36, 20, 4], [34, 44, 40, 36, 44, 28, 3]]) + puff(25, 60, 17) + blooms([[19, 44, 5], [31, 42, 5.4], [41, 46, 4]]);
+  ART[42] = stems([[18, 46, 16, 34, 24, 24, 4], [30, 44, 32, 32, 38, 22, 4], [40, 48, 44, 40, 46, 32, 3]]) + puff(26, 62, 16) + blooms([[17, 47, 4.6], [29, 44, 5.4], [40, 48, 4.4]]);
+  ART[43] = `<rect x="0" y="64" width="50" height="20" fill="${RD}"/><path d="M0 64C8 60 14 66 22 62C30 58 38 64 50 60V66H0Z" fill="${RD}"/>` +
+    stems([[20, 40, 18, 30, 24, 22, 3], [30, 38, 32, 28, 38, 20, 4], [38, 42, 44, 34, 46, 28, 3]]) + puff(25, 54, 15) + blooms([[19, 40, 4.8], [31, 38, 5.2], [40, 42, 4]]);
   // 12월 비
   ART[44] = bg(SKY) + willow(42, 30, 3, 4) + willow(48, 22, -1, 3) + willow(34, 18, 2, 3) + water(66) + `<g transform="translate(5 5)">` +
     `<path d="M6 28C8 16 30 14 34 26Z" fill="${YL}"/><path d="M12 27L20 18M20 18L20 27M20 18L28 26" stroke="${OR}" stroke-width="0.6" opacity="0.6"/><path d="M20 19L21 42" stroke="${BR}" stroke-width="1.1"/>` +
